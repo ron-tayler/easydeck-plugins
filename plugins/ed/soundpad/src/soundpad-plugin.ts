@@ -1,5 +1,6 @@
 import { PLUGIN_API_VERSION, definePlugin, numberParam, stringParam } from '@easydeck/plugin-sdk';
 import type {
+  PluginActivation,
   ParamOption,
   Plugin,
   PluginHost,
@@ -719,14 +720,12 @@ export class SoundpadPlugin implements Plugin {
  * The same wiring `registerSoundpadPlugin` used to do in the main repository,
  * inverted: the plugin describes itself and the host does the installing.
  */
-export default definePlugin({
-  manifest: soundpadManifest,
-  activate() {
-    const plugin = new SoundpadPlugin();
+export function activateWith(options: SoundpadPluginOptions = {}): PluginActivation {
+  const plugin = new SoundpadPlugin(options);
 
-    return {
-      plugin,
-      handlers: {
+  return {
+    plugin,
+    handlers: {
         'ed.soundpad.play': async (params) =>
           plugin.play(stringParam(params, 'sound'), String(params['lines'] ?? '')),
 
@@ -750,8 +749,9 @@ export default definePlugin({
       },
       commands: { reconnect: () => plugin.reconnect() },
     };
-  },
-});
+}
+
+export default definePlugin({ manifest: soundpadManifest, activate: () => activateWith() });
 
 /** One row of Soundpad's list, as much of it as anything here needs. */
 interface Row {

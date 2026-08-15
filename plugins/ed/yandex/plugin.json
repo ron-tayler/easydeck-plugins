@@ -1,0 +1,949 @@
+{
+  "id": "ed.yandex",
+  "main": "main.mjs",
+  "name": {
+    "en": "Yandex Station",
+    "ru": "Яндекс Станция"
+  },
+  "description": {
+    "en": "Music, volume and Alice on Yandex speakers around the house",
+    "ru": "Музыка, громкость и Алиса на Яндекс Станциях по всему дому"
+  },
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "settings": [
+    {
+      "name": "enabled",
+      "type": "boolean",
+      "label": {
+        "en": "Connect to Yandex speakers",
+        "ru": "Подключаться к Яндекс Станциям"
+      },
+      "default": false,
+      "required": false
+    },
+    {
+      "name": "speaker",
+      "type": "select",
+      "required": false,
+      "label": {
+        "en": "Speaker",
+        "ru": "Колонка"
+      },
+      "optionsFrom": "speakers",
+      "description": {
+        "en": "The one keys drive unless they name another. Press Find speakers below to fill this in",
+        "ru": "На неё работают клавиши, если в них не выбрана другая. Список заполняет кнопка «Найти колонки»"
+      },
+      "emptyNote": {
+        "en": "No speakers found yet — sign in, then press Find speakers",
+        "ru": "Колонок пока нет — войдите и нажмите «Найти колонки»"
+      }
+    },
+    {
+      "name": "token",
+      "type": "string",
+      "secret": true,
+      "required": false,
+      "label": {
+        "en": "Yandex account",
+        "ru": "Аккаунт Яндекса"
+      },
+      "description": {
+        "en": "Filled in by Sign in below. Your password is never asked for or stored",
+        "ru": "Заполняется кнопкой «Войти». Пароль не спрашивается и не хранится"
+      }
+    },
+    {
+      "name": "devices",
+      "type": "string",
+      "secret": true,
+      "internal": true,
+      "required": false,
+      "label": {
+        "en": "Known speakers",
+        "ru": "Известные колонки"
+      }
+    }
+  ],
+  "commands": [
+    {
+      "name": "login",
+      "label": {
+        "en": "Sign in",
+        "ru": "Войти"
+      },
+      "icon": "link",
+      "description": {
+        "en": "Opens a Yandex page to confirm on your phone. No password is entered here",
+        "ru": "Откроет страницу Яндекса для подтверждения с телефона. Пароль здесь не вводится"
+      }
+    },
+    {
+      "name": "rescan",
+      "label": {
+        "en": "Find speakers",
+        "ru": "Найти колонки"
+      },
+      "icon": "globe",
+      "description": {
+        "en": "Looks for speakers on the network and reads their names and rooms",
+        "ru": "Ищет колонки в сети и читает их названия и комнаты"
+      }
+    },
+    {
+      "name": "signout",
+      "label": {
+        "en": "Sign out",
+        "ru": "Выйти"
+      },
+      "icon": "stop",
+      "confirm": {
+        "en": "Forget this Yandex account and every speaker found with it?",
+        "ru": "Забыть аккаунт Яндекса и все найденные колонки?"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "name": "ed.yandex.connected",
+      "type": "boolean",
+      "label": {
+        "en": "Speaker connected",
+        "ru": "Колонка на связи"
+      },
+      "initial": false,
+      "argument": {
+        "label": {
+          "en": "Speaker",
+          "ru": "Колонка"
+        },
+        "description": {
+          "en": "Leave empty for the one chosen in settings",
+          "ru": "Оставьте пустым для той, что выбрана в настройках"
+        },
+        "optionsFrom": "speakers"
+      }
+    },
+    {
+      "name": "ed.yandex.speaker",
+      "type": "string",
+      "label": {
+        "en": "Chosen speaker",
+        "ru": "Выбранная колонка"
+      },
+      "description": {
+        "en": "The name of the speaker the settings chose, which the variables with no argument are about",
+        "ru": "Название колонки, выбранной в настройках, — о ней говорят переменные без аргумента"
+      }
+    },
+    {
+      "name": "ed.yandex.playing",
+      "type": "boolean",
+      "label": {
+        "en": "Playing",
+        "ru": "Играет"
+      },
+      "initial": false,
+      "argument": {
+        "label": {
+          "en": "Speaker",
+          "ru": "Колонка"
+        },
+        "description": {
+          "en": "Leave empty for the one chosen in settings",
+          "ru": "Оставьте пустым для той, что выбрана в настройках"
+        },
+        "optionsFrom": "speakers"
+      }
+    },
+    {
+      "name": "ed.yandex.title",
+      "type": "string",
+      "label": {
+        "en": "Track",
+        "ru": "Трек"
+      },
+      "argument": {
+        "label": {
+          "en": "Speaker",
+          "ru": "Колонка"
+        },
+        "description": {
+          "en": "Leave empty for the one chosen in settings",
+          "ru": "Оставьте пустым для той, что выбрана в настройках"
+        },
+        "optionsFrom": "speakers"
+      }
+    },
+    {
+      "name": "ed.yandex.artist",
+      "type": "string",
+      "label": {
+        "en": "Artist",
+        "ru": "Исполнитель"
+      },
+      "argument": {
+        "label": {
+          "en": "Speaker",
+          "ru": "Колонка"
+        },
+        "description": {
+          "en": "Leave empty for the one chosen in settings",
+          "ru": "Оставьте пустым для той, что выбрана в настройках"
+        },
+        "optionsFrom": "speakers"
+      }
+    },
+    {
+      "name": "ed.yandex.volume",
+      "type": "number",
+      "label": {
+        "en": "Volume, %",
+        "ru": "Громкость, %"
+      },
+      "description": {
+        "en": "Nought to a hundred, as a person reads it rather than as the speaker sends it",
+        "ru": "От нуля до ста, как читает человек, а не как присылает колонка"
+      },
+      "argument": {
+        "label": {
+          "en": "Speaker",
+          "ru": "Колонка"
+        },
+        "description": {
+          "en": "Leave empty for the one chosen in settings",
+          "ru": "Оставьте пустым для той, что выбрана в настройках"
+        },
+        "optionsFrom": "speakers"
+      }
+    },
+    {
+      "name": "ed.yandex.progress",
+      "type": "number",
+      "label": {
+        "en": "Position, s",
+        "ru": "Позиция, с"
+      },
+      "argument": {
+        "label": {
+          "en": "Speaker",
+          "ru": "Колонка"
+        },
+        "description": {
+          "en": "Leave empty for the one chosen in settings",
+          "ru": "Оставьте пустым для той, что выбрана в настройках"
+        },
+        "optionsFrom": "speakers"
+      }
+    },
+    {
+      "name": "ed.yandex.duration",
+      "type": "number",
+      "label": {
+        "en": "Length, s",
+        "ru": "Длительность, с"
+      },
+      "argument": {
+        "label": {
+          "en": "Speaker",
+          "ru": "Колонка"
+        },
+        "description": {
+          "en": "Leave empty for the one chosen in settings",
+          "ru": "Оставьте пустым для той, что выбрана в настройках"
+        },
+        "optionsFrom": "speakers"
+      }
+    },
+    {
+      "name": "ed.yandex.progress-time",
+      "type": "string",
+      "label": {
+        "en": "Position, as a clock",
+        "ru": "Позиция, часами"
+      },
+      "description": {
+        "en": "3:07, and 1:02:30 once something runs past an hour",
+        "ru": "3:07, а для длинного — 1:02:30"
+      },
+      "argument": {
+        "label": {
+          "en": "Speaker",
+          "ru": "Колонка"
+        },
+        "description": {
+          "en": "Leave empty for the one chosen in settings",
+          "ru": "Оставьте пустым для той, что выбрана в настройках"
+        },
+        "optionsFrom": "speakers"
+      }
+    },
+    {
+      "name": "ed.yandex.duration-time",
+      "type": "string",
+      "label": {
+        "en": "Length, as a clock",
+        "ru": "Длительность, часами"
+      },
+      "description": {
+        "en": "The other half of {{yandex.progress-time}} / {{yandex.duration-time}}",
+        "ru": "Вторая половина подписи {{yandex.progress-time}} / {{yandex.duration-time}}"
+      },
+      "argument": {
+        "label": {
+          "en": "Speaker",
+          "ru": "Колонка"
+        },
+        "description": {
+          "en": "Leave empty for the one chosen in settings",
+          "ru": "Оставьте пустым для той, что выбрана в настройках"
+        },
+        "optionsFrom": "speakers"
+      }
+    },
+    {
+      "name": "ed.yandex.source",
+      "type": "string",
+      "label": {
+        "en": "What is on",
+        "ru": "Что включено"
+      },
+      "description": {
+        "en": "Playlist, Radio, Album — a radio has no track list, so shuffle and repeat do nothing on one",
+        "ru": "Playlist, Radio, Album — у радио нет списка треков, поэтому перемешивание и повтор на нём не работают"
+      },
+      "argument": {
+        "label": {
+          "en": "Speaker",
+          "ru": "Колонка"
+        },
+        "description": {
+          "en": "Leave empty for the one chosen in settings",
+          "ru": "Оставьте пустым для той, что выбрана в настройках"
+        },
+        "optionsFrom": "speakers"
+      }
+    }
+  ],
+  "surfaces": [
+    {
+      "type": "ed.yandex.cover",
+      "label": {
+        "en": "Album art",
+        "ru": "Обложка"
+      },
+      "description": {
+        "en": "The cover of whatever is playing. Looks best across two keys by two",
+        "ru": "Обложка того, что играет. Лучше всего смотрится на квадрате два на два"
+      },
+      "icon": "page",
+      "params": [
+        {
+          "name": "speaker",
+          "type": "select",
+          "required": false,
+          "label": {
+            "en": "Speaker",
+            "ru": "Колонка"
+          },
+          "optionsFrom": "speakers",
+          "description": {
+            "en": "Leave empty for the one chosen in settings",
+            "ru": "Оставьте пустым для той, что выбрана в настройках"
+          }
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "type": "ed.yandex.play-pause",
+      "icon": "toggle",
+      "label": {
+        "en": "Play or pause",
+        "ru": "Играть или пауза"
+      },
+      "params": [
+        {
+          "name": "mode",
+          "type": "select",
+          "default": "toggle",
+          "label": {
+            "en": "What to do",
+            "ru": "Что сделать"
+          },
+          "options": [
+            {
+              "value": "toggle",
+              "label": {
+                "en": "Toggle",
+                "ru": "Переключить"
+              }
+            },
+            {
+              "value": "play",
+              "label": {
+                "en": "Play",
+                "ru": "Играть"
+              }
+            },
+            {
+              "value": "pause",
+              "label": {
+                "en": "Pause",
+                "ru": "Пауза"
+              }
+            }
+          ]
+        },
+        {
+          "name": "speaker",
+          "type": "select",
+          "required": false,
+          "label": {
+            "en": "Speaker",
+            "ru": "Колонка"
+          },
+          "optionsFrom": "speakers",
+          "description": {
+            "en": "Leave empty for the one chosen in settings",
+            "ru": "Оставьте пустым для той, что выбрана в настройках"
+          }
+        }
+      ]
+    },
+    {
+      "type": "ed.yandex.next-track",
+      "icon": "next",
+      "label": {
+        "en": "Next track",
+        "ru": "Следующий трек"
+      },
+      "params": [
+        {
+          "name": "speaker",
+          "type": "select",
+          "required": false,
+          "label": {
+            "en": "Speaker",
+            "ru": "Колонка"
+          },
+          "optionsFrom": "speakers",
+          "description": {
+            "en": "Leave empty for the one chosen in settings",
+            "ru": "Оставьте пустым для той, что выбрана в настройках"
+          }
+        }
+      ]
+    },
+    {
+      "type": "ed.yandex.prev-track",
+      "icon": "previous",
+      "label": {
+        "en": "Previous track",
+        "ru": "Предыдущий трек"
+      },
+      "params": [
+        {
+          "name": "speaker",
+          "type": "select",
+          "required": false,
+          "label": {
+            "en": "Speaker",
+            "ru": "Колонка"
+          },
+          "optionsFrom": "speakers",
+          "description": {
+            "en": "Leave empty for the one chosen in settings",
+            "ru": "Оставьте пустым для той, что выбрана в настройках"
+          }
+        }
+      ]
+    },
+    {
+      "type": "ed.yandex.rewind",
+      "icon": "clock",
+      "label": {
+        "en": "Seek",
+        "ru": "Перемотать"
+      },
+      "params": [
+        {
+          "name": "mode",
+          "type": "select",
+          "default": "forward",
+          "label": {
+            "en": "Which way",
+            "ru": "Куда"
+          },
+          "options": [
+            {
+              "value": "forward",
+              "label": {
+                "en": "Forward",
+                "ru": "Вперёд"
+              }
+            },
+            {
+              "value": "back",
+              "label": {
+                "en": "Back",
+                "ru": "Назад"
+              }
+            },
+            {
+              "value": "to",
+              "label": {
+                "en": "To position",
+                "ru": "На позицию"
+              }
+            }
+          ]
+        },
+        {
+          "name": "seconds",
+          "type": "number",
+          "default": 15,
+          "min": 0,
+          "max": 3600,
+          "label": {
+            "en": "Seconds",
+            "ru": "Секунды"
+          }
+        },
+        {
+          "name": "speaker",
+          "type": "select",
+          "required": false,
+          "label": {
+            "en": "Speaker",
+            "ru": "Колонка"
+          },
+          "optionsFrom": "speakers",
+          "description": {
+            "en": "Leave empty for the one chosen in settings",
+            "ru": "Оставьте пустым для той, что выбрана в настройках"
+          }
+        }
+      ]
+    },
+    {
+      "type": "ed.yandex.volume",
+      "icon": "increment",
+      "label": {
+        "en": "Volume",
+        "ru": "Громкость"
+      },
+      "params": [
+        {
+          "name": "mode",
+          "type": "select",
+          "default": "up",
+          "label": {
+            "en": "What to do",
+            "ru": "Что сделать"
+          },
+          "options": [
+            {
+              "value": "up",
+              "label": {
+                "en": "Louder",
+                "ru": "Громче"
+              }
+            },
+            {
+              "value": "down",
+              "label": {
+                "en": "Quieter",
+                "ru": "Тише"
+              }
+            },
+            {
+              "value": "set",
+              "label": {
+                "en": "Set to",
+                "ru": "Задать"
+              }
+            }
+          ]
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "default": 10,
+          "min": 0,
+          "max": 100,
+          "label": {
+            "en": "Per cent",
+            "ru": "Проценты"
+          },
+          "description": {
+            "en": "How much to move it by, or what to set it to",
+            "ru": "На сколько изменить или какую выставить"
+          }
+        },
+        {
+          "name": "speaker",
+          "type": "select",
+          "required": false,
+          "label": {
+            "en": "Speaker",
+            "ru": "Колонка"
+          },
+          "optionsFrom": "speakers",
+          "description": {
+            "en": "Leave empty for the one chosen in settings",
+            "ru": "Оставьте пустым для той, что выбрана в настройках"
+          }
+        }
+      ]
+    },
+    {
+      "type": "ed.yandex.repeat",
+      "icon": "cycle",
+      "label": {
+        "en": "Repeat",
+        "ru": "Повтор"
+      },
+      "description": {
+        "en": "Does nothing while a radio station is on: a radio has no track list to repeat",
+        "ru": "Ничего не делает на радио: у радио нет списка треков, который можно повторять"
+      },
+      "params": [
+        {
+          "name": "mode",
+          "type": "select",
+          "default": "cycle",
+          "label": {
+            "en": "Mode",
+            "ru": "Режим"
+          },
+          "options": [
+            {
+              "value": "cycle",
+              "label": {
+                "en": "Next mode",
+                "ru": "Следующий режим"
+              }
+            },
+            {
+              "value": "None",
+              "label": {
+                "en": "Off",
+                "ru": "Выключить"
+              }
+            },
+            {
+              "value": "One",
+              "label": {
+                "en": "One track",
+                "ru": "Один трек"
+              }
+            },
+            {
+              "value": "All",
+              "label": {
+                "en": "Everything",
+                "ru": "Всё подряд"
+              }
+            }
+          ]
+        },
+        {
+          "name": "speaker",
+          "type": "select",
+          "required": false,
+          "label": {
+            "en": "Speaker",
+            "ru": "Колонка"
+          },
+          "optionsFrom": "speakers",
+          "description": {
+            "en": "Leave empty for the one chosen in settings",
+            "ru": "Оставьте пустым для той, что выбрана в настройках"
+          }
+        }
+      ]
+    },
+    {
+      "type": "ed.yandex.shuffle",
+      "icon": "state",
+      "label": {
+        "en": "Shuffle",
+        "ru": "Перемешать"
+      },
+      "description": {
+        "en": "Does nothing while a radio station is on",
+        "ru": "Ничего не делает на радио"
+      },
+      "params": [
+        {
+          "name": "mode",
+          "type": "select",
+          "default": "toggle",
+          "label": {
+            "en": "What to do",
+            "ru": "Что сделать"
+          },
+          "options": [
+            {
+              "value": "toggle",
+              "label": {
+                "en": "Toggle",
+                "ru": "Переключить"
+              }
+            },
+            {
+              "value": "on",
+              "label": {
+                "en": "On",
+                "ru": "Включить"
+              }
+            },
+            {
+              "value": "off",
+              "label": {
+                "en": "Off",
+                "ru": "Выключить"
+              }
+            }
+          ]
+        },
+        {
+          "name": "speaker",
+          "type": "select",
+          "required": false,
+          "label": {
+            "en": "Speaker",
+            "ru": "Колонка"
+          },
+          "optionsFrom": "speakers",
+          "description": {
+            "en": "Leave empty for the one chosen in settings",
+            "ru": "Оставьте пустым для той, что выбрана в настройках"
+          }
+        }
+      ]
+    },
+    {
+      "type": "ed.yandex.command",
+      "icon": "text",
+      "label": {
+        "en": "Tell Alice",
+        "ru": "Команда Алисе"
+      },
+      "description": {
+        "en": "Anything you would say out loud: \"turn on the desk lamp\", \"set a timer for ten minutes\"",
+        "ru": "Что угодно, что вы сказали бы вслух: «включи ночник», «поставь таймер на десять минут»"
+      },
+      "params": [
+        {
+          "name": "text",
+          "type": "string",
+          "label": {
+            "en": "Command",
+            "ru": "Команда"
+          },
+          "placeholder": {
+            "en": "turn on the desk lamp",
+            "ru": "включи ночник"
+          }
+        },
+        {
+          "name": "speaker",
+          "type": "select",
+          "required": false,
+          "label": {
+            "en": "Speaker",
+            "ru": "Колонка"
+          },
+          "optionsFrom": "speakers",
+          "description": {
+            "en": "Leave empty for the one chosen in settings",
+            "ru": "Оставьте пустым для той, что выбрана в настройках"
+          }
+        }
+      ]
+    },
+    {
+      "type": "ed.yandex.say",
+      "icon": "speaker",
+      "label": {
+        "en": "Say out loud",
+        "ru": "Сказать вслух"
+      },
+      "description": {
+        "en": "The speaker reads the text out. Alice does not answer — this is not a command",
+        "ru": "Колонка произносит текст. Алиса не отвечает — это не команда"
+      },
+      "params": [
+        {
+          "name": "text",
+          "type": "string",
+          "label": {
+            "en": "Words",
+            "ru": "Текст"
+          },
+          "placeholder": {
+            "en": "the stream starts in a minute",
+            "ru": "стрим начинается через минуту"
+          }
+        },
+        {
+          "name": "speaker",
+          "type": "select",
+          "required": false,
+          "label": {
+            "en": "Speaker",
+            "ru": "Колонка"
+          },
+          "optionsFrom": "speakers",
+          "description": {
+            "en": "Leave empty for the one chosen in settings",
+            "ru": "Оставьте пустым для той, что выбрана в настройках"
+          }
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "cover",
+      "label": {
+        "en": "Album art",
+        "ru": "Обложка"
+      },
+      "description": {
+        "en": "Shows what is playing and pauses it when pressed. Stretch it over two keys by two",
+        "ru": "Показывает, что играет, и ставит на паузу. Растяните на квадрат два на два"
+      },
+      "button": {
+        "stateFrom": "ed.yandex.playing",
+        "states": [
+          {
+            "id": "paused",
+            "when": false,
+            "visual": {
+              "background": "#1a1c22",
+              "surface": {
+                "type": "ed.yandex.cover"
+              },
+              "label": {
+                "text": "{{yandex.title}}",
+                "fontSize": 11
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.yandex.play-pause",
+                  "params": {
+                    "mode": "toggle"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "playing",
+            "when": true,
+            "visual": {
+              "background": "#1a1c22",
+              "surface": {
+                "type": "ed.yandex.cover"
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.yandex.play-pause",
+                  "params": {
+                    "mode": "toggle"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "play-pause",
+      "label": {
+        "en": "Play / pause",
+        "ru": "Играть / пауза"
+      },
+      "button": {
+        "stateFrom": "ed.yandex.playing",
+        "states": [
+          {
+            "id": "paused",
+            "when": false,
+            "visual": {
+              "background": "#22303c",
+              "icon": {
+                "source": "plugin:ed.yandex/play.svg"
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.yandex.play-pause",
+                  "params": {
+                    "mode": "toggle"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "playing",
+            "when": true,
+            "visual": {
+              "background": "#2f6f4f",
+              "icon": {
+                "source": "plugin:ed.yandex/pause.svg"
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.yandex.play-pause",
+                  "params": {
+                    "mode": "toggle"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "now-playing",
+      "label": {
+        "en": "What is playing",
+        "ru": "Что играет"
+      },
+      "description": {
+        "en": "The track and the artist, as text",
+        "ru": "Трек и исполнитель, текстом"
+      },
+      "button": {
+        "states": [
+          {
+            "id": "default",
+            "visual": {
+              "background": "#1a1c22",
+              "label": {
+                "text": "{{yandex.title}}\n{{yandex.artist}}",
+                "fontSize": 11
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

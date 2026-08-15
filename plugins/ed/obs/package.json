@@ -1,8 +1,8 @@
 {
-  "name": "ed-soundpad",
+  "name": "ed-obs",
   "version": "1.0.0",
   "private": true,
-  "description": "Plays the sounds from your Soundpad list, and its volume",
+  "description": "Scenes, streaming, recording and audio in OBS Studio",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -10,11 +10,13 @@
     "test": "node --import tsx --test \"src/*.test.ts\""
   },
   "dependencies": {
-    "@easydeck/plugin-sdk": "workspace:*"
+    "@easydeck/plugin-sdk": "workspace:*",
+    "ws": "^8.21.1"
   },
   "devDependencies": {
+    "@easydeck/engine": "link:../../../../EasyDeck/packages/engine",
     "@types/node": "^24.13.3",
     "typescript": "~5.9.3",
-    "@easydeck/engine": "link:../../../../EasyDeck/packages/engine"
+    "@types/ws": "^8.18.1"
   }
 }

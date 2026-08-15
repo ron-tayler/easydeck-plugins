@@ -1,0 +1,1111 @@
+{
+  "id": "ed.obs",
+  "main": "main.mjs",
+  "name": {
+    "en": "OBS",
+    "ru": "OBS"
+  },
+  "description": {
+    "en": "Scenes, streaming, recording and audio in OBS Studio",
+    "ru": "Сцены, стрим, запись и звук в OBS Studio"
+  },
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "surfaces": [
+    {
+      "type": "ed.obs.thumbnail",
+      "label": {
+        "en": "Scene thumbnail",
+        "ru": "Миниатюра сцены"
+      },
+      "description": {
+        "en": "What a scene or a source looks like right now, on the key that switches to it",
+        "ru": "Как сейчас выглядит сцена или источник — на клавише, которая её включает"
+      },
+      "icon": "page",
+      "params": [
+        {
+          "name": "source",
+          "type": "select",
+          "optionsFrom": "shootable",
+          "label": {
+            "en": "What to show",
+            "ru": "Что показывать"
+          },
+          "default": "@program",
+          "emptyNote": {
+            "en": "OBS is not running, so it cannot say what it has",
+            "ru": "OBS не запущен, поэтому список сцен взять неоткуда"
+          }
+        },
+        {
+          "name": "every",
+          "type": "select",
+          "label": {
+            "en": "Refresh",
+            "ru": "Обновлять"
+          },
+          "default": "5",
+          "options": [
+            {
+              "value": "1",
+              "label": {
+                "en": "Every second",
+                "ru": "Раз в секунду"
+              }
+            },
+            {
+              "value": "5",
+              "label": {
+                "en": "Every 5 seconds",
+                "ru": "Раз в 5 секунд"
+              }
+            },
+            {
+              "value": "10",
+              "label": {
+                "en": "Every 10 seconds",
+                "ru": "Раз в 10 секунд"
+              }
+            },
+            {
+              "value": "30",
+              "label": {
+                "en": "Every 30 seconds",
+                "ru": "Раз в 30 секунд"
+              }
+            },
+            {
+              "value": "60",
+              "label": {
+                "en": "Every minute",
+                "ru": "Раз в минуту"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "ed.obs.meter",
+      "label": {
+        "en": "Level meter",
+        "ru": "Индикатор уровня"
+      },
+      "description": {
+        "en": "How loud an input actually is, as a strip along the key",
+        "ru": "Насколько громок вход на самом деле — полоской по краю клавиши"
+      },
+      "icon": "mute",
+      "params": [
+        {
+          "name": "inputs",
+          "type": "list",
+          "optionsFrom": "audio-inputs",
+          "label": {
+            "en": "Sources",
+            "ru": "Источники"
+          },
+          "description": {
+            "en": "Drawn in the order listed, sharing one scale so they can be compared",
+            "ru": "Рисуются в порядке списка, по общей шкале — чтобы их можно было сравнивать"
+          },
+          "emptyNote": {
+            "en": "OBS is not running, so it cannot say what it has",
+            "ru": "OBS не запущен, поэтому список источников взять неоткуда"
+          }
+        },
+        {
+          "name": "direction",
+          "type": "select",
+          "label": {
+            "en": "Bars",
+            "ru": "Полоски"
+          },
+          "default": "bottom",
+          "options": [
+            {
+              "value": "bottom",
+              "label": {
+                "en": "Lying, stacked upward",
+                "ru": "Лежат, стопкой снизу вверх"
+              }
+            },
+            {
+              "value": "side",
+              "label": {
+                "en": "Standing, side by side",
+                "ru": "Стоят рядом, слева направо"
+              }
+            }
+          ]
+        },
+        {
+          "name": "thickness",
+          "type": "number",
+          "label": {
+            "en": "How much of the key, %",
+            "ru": "Сколько от клавиши, %"
+          },
+          "default": 100,
+          "min": 2,
+          "max": 100,
+          "description": {
+            "en": "Less than all of it leaves room for a label saying which inputs these are",
+            "ru": "Меньше ста оставляет место для подписи, какие это входы"
+          }
+        },
+        {
+          "name": "calm",
+          "type": "color",
+          "label": {
+            "en": "Quiet",
+            "ru": "Тихо"
+          },
+          "default": "#3fb950"
+        },
+        {
+          "name": "loud",
+          "type": "color",
+          "label": {
+            "en": "Loud",
+            "ru": "Громко"
+          },
+          "default": "#d29922"
+        },
+        {
+          "name": "hot",
+          "type": "color",
+          "label": {
+            "en": "Too loud",
+            "ru": "Перегруз"
+          },
+          "default": "#f85149"
+        },
+        {
+          "name": "track",
+          "type": "color",
+          "label": {
+            "en": "The trough behind a bar",
+            "ru": "Подложка под полоской"
+          },
+          "default": "#ffffff20",
+          "required": false,
+          "description": {
+            "en": "Without it a silent input draws nothing, and you cannot tell which bar is which",
+            "ru": "Без неё молчащий вход не рисует ничего, и не понять, где какая полоска"
+          }
+        },
+        {
+          "name": "background",
+          "type": "color",
+          "label": {
+            "en": "Behind the meter",
+            "ru": "Фон индикатора"
+          },
+          "required": false,
+          "description": {
+            "en": "Empty lets the key's own background show through",
+            "ru": "Пусто — виден собственный фон клавиши"
+          }
+        }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "name": "enabled",
+      "type": "boolean",
+      "label": {
+        "en": "Connect to OBS",
+        "ru": "Подключаться к OBS"
+      },
+      "default": false,
+      "required": false
+    },
+    {
+      "name": "host",
+      "type": "string",
+      "label": {
+        "en": "Address",
+        "ru": "Адрес"
+      },
+      "default": "127.0.0.1",
+      "description": {
+        "en": "Leave as it is unless OBS runs on another machine",
+        "ru": "Оставьте как есть, если OBS не на другом компьютере"
+      }
+    },
+    {
+      "name": "port",
+      "type": "number",
+      "label": {
+        "en": "Port",
+        "ru": "Порт"
+      },
+      "default": 4455,
+      "min": 1,
+      "max": 65535
+    },
+    {
+      "name": "password",
+      "type": "string",
+      "secret": true,
+      "required": false,
+      "label": {
+        "en": "Password",
+        "ru": "Пароль"
+      },
+      "description": {
+        "en": "From Tools → WebSocket Server Settings in OBS",
+        "ru": "Из «Инструменты → Настройки сервера WebSocket» в OBS"
+      }
+    }
+  ],
+  "commands": [
+    {
+      "name": "reconnect",
+      "label": {
+        "en": "Reconnect",
+        "ru": "Переподключиться"
+      },
+      "icon": "link"
+    }
+  ],
+  "variables": [
+    {
+      "name": "ed.obs.connected",
+      "type": "boolean",
+      "label": {
+        "en": "OBS connected",
+        "ru": "OBS подключён"
+      },
+      "initial": false
+    },
+    {
+      "name": "ed.obs.scene",
+      "type": "string",
+      "label": {
+        "en": "Current scene",
+        "ru": "Текущая сцена"
+      }
+    },
+    {
+      "name": "ed.obs.streaming",
+      "type": "boolean",
+      "label": {
+        "en": "Streaming",
+        "ru": "Идёт трансляция"
+      },
+      "initial": false
+    },
+    {
+      "name": "ed.obs.recording",
+      "type": "boolean",
+      "label": {
+        "en": "Recording",
+        "ru": "Идёт запись"
+      },
+      "initial": false
+    },
+    {
+      "name": "ed.obs.recording-paused",
+      "type": "boolean",
+      "label": {
+        "en": "Recording paused",
+        "ru": "Запись на паузе"
+      },
+      "initial": false
+    },
+    {
+      "name": "ed.obs.replay-buffer",
+      "type": "boolean",
+      "label": {
+        "en": "Replay buffer on",
+        "ru": "Буфер повтора включён"
+      },
+      "initial": false
+    },
+    {
+      "name": "ed.obs.virtual-cam",
+      "type": "boolean",
+      "label": {
+        "en": "Virtual camera on",
+        "ru": "Виртуальная камера включена"
+      },
+      "initial": false
+    },
+    {
+      "name": "ed.obs.transitioning",
+      "type": "boolean",
+      "label": {
+        "en": "Transition running",
+        "ru": "Идёт переход"
+      },
+      "initial": false
+    },
+    {
+      "name": "ed.obs.transition-name",
+      "type": "string",
+      "label": {
+        "en": "Current transition",
+        "ru": "Текущий переход"
+      }
+    },
+    {
+      "name": "ed.obs.transition-duration",
+      "type": "number",
+      "label": {
+        "en": "Transition, ms",
+        "ru": "Длительность перехода, мс"
+      },
+      "initial": 0
+    },
+    {
+      "name": "ed.obs.mute",
+      "type": "boolean",
+      "label": {
+        "en": "Muted",
+        "ru": "Звук выключен"
+      },
+      "argument": {
+        "label": {
+          "en": "Source",
+          "ru": "Источник"
+        },
+        "optionsFrom": "audio-inputs"
+      }
+    },
+    {
+      "name": "ed.obs.volume",
+      "type": "number",
+      "label": {
+        "en": "Volume, dB",
+        "ru": "Громкость, дБ"
+      },
+      "argument": {
+        "label": {
+          "en": "Source",
+          "ru": "Источник"
+        },
+        "optionsFrom": "audio-inputs"
+      }
+    },
+    {
+      "name": "ed.obs.monitor",
+      "type": "enum",
+      "label": {
+        "en": "Monitoring",
+        "ru": "Прослушивание"
+      },
+      "options": [
+        {
+          "value": "off",
+          "label": {
+            "en": "Off",
+            "ru": "Выключено"
+          }
+        },
+        {
+          "value": "monitor",
+          "label": {
+            "en": "Monitor only",
+            "ru": "Только слушать"
+          }
+        },
+        {
+          "value": "both",
+          "label": {
+            "en": "Monitor and output",
+            "ru": "Слушать и выводить"
+          }
+        }
+      ],
+      "argument": {
+        "label": {
+          "en": "Source",
+          "ru": "Источник"
+        },
+        "optionsFrom": "audio-inputs"
+      }
+    },
+    {
+      "name": "ed.obs.filter",
+      "type": "boolean",
+      "label": {
+        "en": "Filter on",
+        "ru": "Фильтр включён"
+      },
+      "argument": {
+        "label": {
+          "en": "Source",
+          "ru": "Источник"
+        },
+        "optionsFrom": "sources",
+        "then": {
+          "label": {
+            "en": "Filter",
+            "ru": "Фильтр"
+          },
+          "optionsFrom": "filters"
+        }
+      }
+    },
+    {
+      "name": "ed.obs.visible",
+      "type": "boolean",
+      "label": {
+        "en": "Source shown",
+        "ru": "Источник показан"
+      },
+      "argument": {
+        "label": {
+          "en": "Scene",
+          "ru": "Сцена"
+        },
+        "optionsFrom": "scenes",
+        "then": {
+          "label": {
+            "en": "Source",
+            "ru": "Источник"
+          },
+          "optionsFrom": "scene-sources"
+        }
+      }
+    }
+  ],
+  "actions": [
+    {
+      "type": "ed.obs.set-scene",
+      "icon": "page",
+      "label": {
+        "en": "Switch scene",
+        "ru": "Переключить сцену"
+      },
+      "params": [
+        {
+          "name": "scene",
+          "type": "select",
+          "optionsFrom": "scenes",
+          "label": {
+            "en": "Scene",
+            "ru": "Сцена"
+          },
+          "placeholder": {
+            "en": "Name of the scene",
+            "ru": "Название сцены"
+          }
+        }
+      ],
+      "group": {
+        "en": "Scenes",
+        "ru": "Сцены"
+      }
+    },
+    {
+      "type": "ed.obs.preview-scene",
+      "icon": "page",
+      "label": {
+        "en": "Set preview scene",
+        "ru": "Сцена в предпросмотр"
+      },
+      "description": {
+        "en": "Studio mode only: puts a scene in the preview without going live",
+        "ru": "Только в студийном режиме: ставит сцену в предпросмотр, не выпуская в эфир"
+      },
+      "params": [
+        {
+          "name": "scene",
+          "type": "select",
+          "optionsFrom": "scenes",
+          "label": {
+            "en": "Scene",
+            "ru": "Сцена"
+          }
+        }
+      ],
+      "group": {
+        "en": "Scenes",
+        "ru": "Сцены"
+      }
+    },
+    {
+      "type": "ed.obs.transition",
+      "icon": "back",
+      "label": {
+        "en": "Transition",
+        "ru": "Переход"
+      },
+      "description": {
+        "en": "Studio mode only: sends the preview to the stream",
+        "ru": "Только в студийном режиме: отправляет предпросмотр в эфир"
+      },
+      "params": [],
+      "group": {
+        "en": "Scenes",
+        "ru": "Сцены"
+      }
+    },
+    {
+      "type": "ed.obs.toggle-stream",
+      "presetOnly": true,
+      "icon": "globe",
+      "label": {
+        "en": "Start / stop stream",
+        "ru": "Начать / завершить трансляцию"
+      },
+      "params": [],
+      "group": {
+        "en": "Broadcast",
+        "ru": "Эфир"
+      }
+    },
+    {
+      "type": "ed.obs.toggle-record",
+      "presetOnly": true,
+      "icon": "stop",
+      "label": {
+        "en": "Start / stop recording",
+        "ru": "Начать / остановить запись"
+      },
+      "params": [],
+      "group": {
+        "en": "Broadcast",
+        "ru": "Эфир"
+      }
+    },
+    {
+      "type": "ed.obs.toggle-record-pause",
+      "icon": "play-pause",
+      "label": {
+        "en": "Pause / resume recording",
+        "ru": "Пауза / продолжить запись"
+      },
+      "params": [],
+      "group": {
+        "en": "Broadcast",
+        "ru": "Эфир"
+      }
+    },
+    {
+      "type": "ed.obs.toggle-replay-buffer",
+      "presetOnly": true,
+      "icon": "previous",
+      "label": {
+        "en": "Replay buffer on / off",
+        "ru": "Буфер повтора вкл / выкл"
+      },
+      "params": [],
+      "group": {
+        "en": "Broadcast",
+        "ru": "Эфир"
+      }
+    },
+    {
+      "type": "ed.obs.save-replay",
+      "icon": "next",
+      "label": {
+        "en": "Save replay",
+        "ru": "Сохранить повтор"
+      },
+      "params": [],
+      "group": {
+        "en": "Broadcast",
+        "ru": "Эфир"
+      }
+    },
+    {
+      "type": "ed.obs.toggle-virtual-cam",
+      "presetOnly": true,
+      "icon": "app",
+      "label": {
+        "en": "Virtual camera on / off",
+        "ru": "Виртуальная камера вкл / выкл"
+      },
+      "params": [],
+      "group": {
+        "en": "Broadcast",
+        "ru": "Эфир"
+      }
+    },
+    {
+      "type": "ed.obs.toggle-mute",
+      "icon": "mute",
+      "label": {
+        "en": "Mute / unmute",
+        "ru": "Выключить / включить звук"
+      },
+      "params": [
+        {
+          "name": "input",
+          "type": "select",
+          "optionsFrom": "audio-inputs",
+          "label": {
+            "en": "Source",
+            "ru": "Источник"
+          },
+          "placeholder": {
+            "en": "Name of the audio source",
+            "ru": "Название источника звука"
+          }
+        }
+      ],
+      "group": {
+        "en": "Audio",
+        "ru": "Звук"
+      }
+    },
+    {
+      "type": "ed.obs.set-volume",
+      "icon": "volume-up",
+      "label": {
+        "en": "Set volume",
+        "ru": "Задать громкость"
+      },
+      "description": {
+        "en": "In decibels, as OBS shows them: 0 is unchanged, −60 is silence",
+        "ru": "В децибелах, как показывает OBS: 0 — без изменения, −60 — тишина"
+      },
+      "params": [
+        {
+          "name": "input",
+          "type": "select",
+          "optionsFrom": "audio-inputs",
+          "label": {
+            "en": "Source",
+            "ru": "Источник"
+          }
+        },
+        {
+          "name": "db",
+          "type": "number",
+          "label": {
+            "en": "Volume, dB",
+            "ru": "Громкость, дБ"
+          },
+          "default": 0,
+          "min": -100,
+          "max": 26
+        }
+      ],
+      "group": {
+        "en": "Audio",
+        "ru": "Звук"
+      }
+    },
+    {
+      "type": "ed.obs.adjust-volume",
+      "icon": "volume-down",
+      "label": {
+        "en": "Change volume",
+        "ru": "Изменить громкость"
+      },
+      "description": {
+        "en": "Adds to the current volume; a negative number turns it down",
+        "ru": "Прибавляет к текущей громкости; отрицательное число убавляет"
+      },
+      "params": [
+        {
+          "name": "input",
+          "type": "select",
+          "optionsFrom": "audio-inputs",
+          "label": {
+            "en": "Source",
+            "ru": "Источник"
+          }
+        },
+        {
+          "name": "db",
+          "type": "number",
+          "label": {
+            "en": "Change, dB",
+            "ru": "Изменение, дБ"
+          },
+          "default": -3,
+          "min": -50,
+          "max": 50
+        }
+      ],
+      "group": {
+        "en": "Audio",
+        "ru": "Звук"
+      }
+    },
+    {
+      "type": "ed.obs.set-monitor",
+      "icon": "keyboard",
+      "label": {
+        "en": "Set monitoring",
+        "ru": "Прослушивание источника"
+      },
+      "description": {
+        "en": "Whether you hear the source yourself, and whether the stream does",
+        "ru": "Слышите ли источник вы сами и попадает ли он в трансляцию"
+      },
+      "params": [
+        {
+          "name": "input",
+          "type": "select",
+          "optionsFrom": "audio-inputs",
+          "label": {
+            "en": "Source",
+            "ru": "Источник"
+          }
+        },
+        {
+          "name": "monitor",
+          "type": "select",
+          "label": {
+            "en": "Monitoring",
+            "ru": "Прослушивание"
+          },
+          "options": [
+            {
+              "value": "off",
+              "label": {
+                "en": "Off",
+                "ru": "Выключено"
+              }
+            },
+            {
+              "value": "monitor",
+              "label": {
+                "en": "Monitor only",
+                "ru": "Только слушать"
+              }
+            },
+            {
+              "value": "both",
+              "label": {
+                "en": "Monitor and output",
+                "ru": "Слушать и выводить"
+              }
+            }
+          ],
+          "default": "monitor"
+        }
+      ],
+      "group": {
+        "en": "Audio",
+        "ru": "Звук"
+      }
+    },
+    {
+      "type": "ed.obs.toggle-filter",
+      "icon": "toggle",
+      "label": {
+        "en": "Filter on / off",
+        "ru": "Фильтр вкл / выкл"
+      },
+      "description": {
+        "en": "Any filter OBS lists on the source, audio or visual alike",
+        "ru": "Любой фильтр источника — что звуковой, что визуальный"
+      },
+      "params": [
+        {
+          "name": "source",
+          "type": "select",
+          "optionsFrom": "sources",
+          "label": {
+            "en": "Source",
+            "ru": "Источник"
+          }
+        },
+        {
+          "name": "filter",
+          "type": "select",
+          "optionsFrom": "filters",
+          "dependsOn": [
+            "source"
+          ],
+          "emptyNote": {
+            "en": "OBS lists no filters on that source",
+            "ru": "OBS не показывает фильтров у этого источника"
+          },
+          "label": {
+            "en": "Filter",
+            "ru": "Фильтр"
+          }
+        }
+      ],
+      "group": {
+        "en": "Filters",
+        "ru": "Фильтры"
+      }
+    },
+    {
+      "type": "ed.obs.toggle-source",
+      "icon": "folder",
+      "label": {
+        "en": "Show / hide source",
+        "ru": "Показать / скрыть источник"
+      },
+      "params": [
+        {
+          "name": "scene",
+          "type": "select",
+          "optionsFrom": "scenes",
+          "label": {
+            "en": "Scene",
+            "ru": "Сцена"
+          }
+        },
+        {
+          "name": "source",
+          "type": "select",
+          "optionsFrom": "sources",
+          "dependsOn": [
+            "scene"
+          ],
+          "emptyNote": {
+            "en": "That scene has nothing in it",
+            "ru": "В этой сцене ничего нет"
+          },
+          "label": {
+            "en": "Source",
+            "ru": "Источник"
+          }
+        }
+      ],
+      "group": {
+        "en": "Audio",
+        "ru": "Звук"
+      }
+    }
+  ],
+  "presets": [
+    {
+      "name": "stream",
+      "label": {
+        "en": "Stream",
+        "ru": "Трансляция"
+      },
+      "description": {
+        "en": "Starts and stops the stream, and shows whether it is live",
+        "ru": "Запускает и останавливает трансляцию и показывает, идёт ли она"
+      },
+      "button": {
+        "stateFrom": "ed.obs.streaming",
+        "states": [
+          {
+            "id": "off",
+            "when": false,
+            "visual": {
+              "background": "#22303c",
+              "label": {
+                "text": "Stream",
+                "fontSize": 13
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.obs.toggle-stream"
+                }
+              ]
+            }
+          },
+          {
+            "id": "on",
+            "when": true,
+            "visual": {
+              "background": "#7a2c2c",
+              "label": {
+                "text": "LIVE",
+                "fontSize": 13
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.obs.toggle-stream"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "record",
+      "label": {
+        "en": "Recording",
+        "ru": "Запись"
+      },
+      "description": {
+        "en": "Starts and stops recording, and shows whether it is running",
+        "ru": "Запускает и останавливает запись и показывает, идёт ли она"
+      },
+      "button": {
+        "stateFrom": "ed.obs.recording",
+        "states": [
+          {
+            "id": "off",
+            "when": false,
+            "visual": {
+              "background": "#22303c",
+              "label": {
+                "text": "Record",
+                "fontSize": 13
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.obs.toggle-record"
+                }
+              ]
+            }
+          },
+          {
+            "id": "on",
+            "when": true,
+            "visual": {
+              "background": "#7a2c2c",
+              "label": {
+                "text": "● REC",
+                "fontSize": 13
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.obs.toggle-record"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "replay",
+      "label": {
+        "en": "Replay buffer",
+        "ru": "Буфер повтора"
+      },
+      "description": {
+        "en": "Turns the replay buffer on and off",
+        "ru": "Включает и выключает буфер повтора"
+      },
+      "button": {
+        "stateFrom": "ed.obs.replay-buffer",
+        "states": [
+          {
+            "id": "off",
+            "when": false,
+            "visual": {
+              "background": "#22303c",
+              "label": {
+                "text": "Replay",
+                "fontSize": 13
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.obs.toggle-replay-buffer"
+                }
+              ]
+            }
+          },
+          {
+            "id": "on",
+            "when": true,
+            "visual": {
+              "background": "#2f5d3a",
+              "label": {
+                "text": "Replay on",
+                "fontSize": 13
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.obs.toggle-replay-buffer"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "virtual-cam",
+      "label": {
+        "en": "Virtual camera",
+        "ru": "Виртуальная камера"
+      },
+      "description": {
+        "en": "Turns the virtual camera on and off",
+        "ru": "Включает и выключает виртуальную камеру"
+      },
+      "button": {
+        "stateFrom": "ed.obs.virtual-cam",
+        "states": [
+          {
+            "id": "off",
+            "when": false,
+            "visual": {
+              "background": "#22303c",
+              "label": {
+                "text": "Cam",
+                "fontSize": 13
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.obs.toggle-virtual-cam"
+                }
+              ]
+            }
+          },
+          {
+            "id": "on",
+            "when": true,
+            "visual": {
+              "background": "#2f5d3a",
+              "label": {
+                "text": "Cam on",
+                "fontSize": 13
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.obs.toggle-virtual-cam"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "current-scene",
+      "label": {
+        "en": "Current scene",
+        "ru": "Текущая сцена"
+      },
+      "description": {
+        "en": "Shows which scene is live, and does nothing when pressed",
+        "ru": "Показывает, какая сцена в эфире; на нажатие не реагирует"
+      },
+      "button": {
+        "states": [
+          {
+            "id": "default",
+            "visual": {
+              "background": "#22303c",
+              "label": {
+                "text": "{{obs.scene}}",
+                "fontSize": 12
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

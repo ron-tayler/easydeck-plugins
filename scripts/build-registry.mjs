@@ -80,6 +80,12 @@ async function buildOne(author, name, folder) {
     // because an installed plugin has no node_modules to resolve from.
     packages: 'bundle',
     external: ['node:*'],
+    banner: {
+      // CommonJS dependencies — ws is one — call require('events') at run
+      // time, and an ESM bundle has no require to give them. This hands them
+      // the real one instead of esbuild's shim that only knows how to throw.
+      js: "import { createRequire as __edCreateRequire } from 'node:module'; const require = __edCreateRequire(import.meta.url);",
+    },
     logLevel: 'silent',
   });
 

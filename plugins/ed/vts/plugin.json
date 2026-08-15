@@ -1,0 +1,425 @@
+{
+  "id": "ed.vts",
+  "main": "main.mjs",
+  "name": {
+    "en": "VTube Studio",
+    "ru": "VTube Studio"
+  },
+  "description": {
+    "en": "Hotkeys, expressions and models in VTube Studio",
+    "ru": "Хоткеи, выражения и модели в VTube Studio"
+  },
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "settings": [
+    {
+      "name": "enabled",
+      "type": "boolean",
+      "label": {
+        "en": "Connect to VTube Studio",
+        "ru": "Подключаться к VTube Studio"
+      },
+      "default": false,
+      "required": false
+    },
+    {
+      "name": "host",
+      "type": "string",
+      "label": {
+        "en": "Address",
+        "ru": "Адрес"
+      },
+      "default": "127.0.0.1",
+      "description": {
+        "en": "Leave as it is unless VTube Studio runs on another machine",
+        "ru": "Оставьте как есть, если VTube Studio не на другом компьютере"
+      }
+    },
+    {
+      "name": "port",
+      "type": "number",
+      "label": {
+        "en": "Port",
+        "ru": "Порт"
+      },
+      "default": 8001,
+      "min": 1,
+      "max": 65535,
+      "description": {
+        "en": "From the API section of VTube Studio settings, where it must also be switched on",
+        "ru": "Из раздела API в настройках VTube Studio, там же его надо включить"
+      }
+    },
+    {
+      "name": "token",
+      "type": "string",
+      "secret": true,
+      "required": false,
+      "label": {
+        "en": "Access token",
+        "ru": "Токен доступа"
+      },
+      "description": {
+        "en": "Filled in by Authorise below; VTube Studio asks you to allow it once",
+        "ru": "Заполняется кнопкой «Авторизовать»; VTube Studio один раз спросит разрешение"
+      }
+    }
+  ],
+  "commands": [
+    {
+      "name": "authorise",
+      "label": {
+        "en": "Authorise",
+        "ru": "Авторизовать"
+      },
+      "icon": "link",
+      "description": {
+        "en": "VTube Studio will ask you to allow EasyDeck — switch to it and press Allow",
+        "ru": "VTube Studio попросит разрешить EasyDeck — переключитесь в него и нажмите «Разрешить»"
+      }
+    },
+    {
+      "name": "reconnect",
+      "label": {
+        "en": "Reconnect",
+        "ru": "Переподключиться"
+      },
+      "icon": "link"
+    }
+  ],
+  "variables": [
+    {
+      "name": "ed.vts.connected",
+      "type": "boolean",
+      "label": {
+        "en": "VTube Studio connected",
+        "ru": "VTube Studio подключён"
+      },
+      "initial": false
+    },
+    {
+      "name": "ed.vts.model",
+      "type": "string",
+      "label": {
+        "en": "Current model",
+        "ru": "Текущая модель"
+      }
+    },
+    {
+      "name": "ed.vts.tracking",
+      "type": "boolean",
+      "label": {
+        "en": "Face tracked",
+        "ru": "Лицо в кадре"
+      },
+      "initial": false,
+      "description": {
+        "en": "Whether VTube Studio can see a face right now",
+        "ru": "Видит ли VTube Studio лицо прямо сейчас"
+      }
+    },
+    {
+      "name": "ed.vts.expression",
+      "type": "boolean",
+      "label": {
+        "en": "Expression active",
+        "ru": "Выражение включено"
+      },
+      "argument": {
+        "label": {
+          "en": "Expression",
+          "ru": "Выражение"
+        },
+        "optionsFrom": "expressions"
+      }
+    },
+    {
+      "name": "ed.vts.animation",
+      "type": "string",
+      "label": {
+        "en": "Animation playing",
+        "ru": "Играет анимация"
+      },
+      "description": {
+        "en": "The name of the animation running now, idle animations aside",
+        "ru": "Название анимации, которая идёт сейчас; фоновая idle не в счёт"
+      }
+    },
+    {
+      "name": "ed.vts.animation-active",
+      "type": "boolean",
+      "label": {
+        "en": "This animation playing",
+        "ru": "Эта анимация играет"
+      },
+      "argument": {
+        "label": {
+          "en": "Animation",
+          "ru": "Анимация"
+        },
+        "optionsFrom": "animations"
+      }
+    },
+    {
+      "name": "ed.vts.hotkey",
+      "type": "string",
+      "label": {
+        "en": "Last hotkey",
+        "ru": "Последний хоткей"
+      },
+      "description": {
+        "en": "Whatever fired last, whoever fired it — you, a key press, or another plugin",
+        "ru": "Что сработало последним, от кого угодно: от вас, с клавиатуры или из другого плагина"
+      }
+    }
+  ],
+  "actions": [
+    {
+      "type": "ed.vts.trigger-hotkey",
+      "icon": "star",
+      "label": {
+        "en": "Trigger hotkey",
+        "ru": "Запустить хоткей"
+      },
+      "description": {
+        "en": "Runs one of the current model's hotkeys: an animation, an outfit, anything you set up",
+        "ru": "Запускает хоткей текущей модели: анимацию, одежду, что угодно из настроенного"
+      },
+      "params": [
+        {
+          "name": "hotkey",
+          "type": "select",
+          "label": {
+            "en": "Hotkey",
+            "ru": "Хоткей"
+          },
+          "optionsFrom": "hotkeys",
+          "description": {
+            "en": "Named as in VTube Studio. A hotkey of a model that is not loaded does nothing",
+            "ru": "Название как в VTube Studio. Хоткей незагруженной модели ничего не сделает"
+          }
+        }
+      ]
+    },
+    {
+      "type": "ed.vts.set-expression",
+      "icon": "smile",
+      "label": {
+        "en": "Expression",
+        "ru": "Выражение"
+      },
+      "params": [
+        {
+          "name": "expression",
+          "type": "select",
+          "label": {
+            "en": "Expression",
+            "ru": "Выражение"
+          },
+          "optionsFrom": "expressions"
+        },
+        {
+          "name": "mode",
+          "type": "select",
+          "label": {
+            "en": "What to do",
+            "ru": "Что сделать"
+          },
+          "default": "toggle",
+          "options": [
+            {
+              "value": "toggle",
+              "label": {
+                "en": "Toggle",
+                "ru": "Переключить"
+              }
+            },
+            {
+              "value": "on",
+              "label": {
+                "en": "Turn on",
+                "ru": "Включить"
+              }
+            },
+            {
+              "value": "off",
+              "label": {
+                "en": "Turn off",
+                "ru": "Выключить"
+              }
+            }
+          ]
+        },
+        {
+          "name": "fade",
+          "type": "number",
+          "label": {
+            "en": "Fade, seconds",
+            "ru": "Плавность, секунды"
+          },
+          "default": 0.25,
+          "min": 0,
+          "max": 2,
+          "step": 0.05,
+          "required": false
+        }
+      ]
+    },
+    {
+      "type": "ed.vts.load-model",
+      "icon": "person",
+      "label": {
+        "en": "Load model",
+        "ru": "Загрузить модель"
+      },
+      "params": [
+        {
+          "name": "model",
+          "type": "select",
+          "label": {
+            "en": "Model",
+            "ru": "Модель"
+          },
+          "optionsFrom": "models"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "expression",
+      "label": {
+        "en": "Expression",
+        "ru": "Выражение"
+      },
+      "description": {
+        "en": "Toggles an expression and shows whether it is on. Choose which in the key editor",
+        "ru": "Переключает выражение и показывает, включено ли оно. Какое — в редакторе кнопки"
+      },
+      "button": {
+        "stateFrom": "ed.vts.expression",
+        "states": [
+          {
+            "id": "off",
+            "when": false,
+            "visual": {
+              "background": "#22303c",
+              "label": {
+                "text": "Выражение",
+                "fontSize": 13
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.vts.set-expression",
+                  "params": {
+                    "mode": "toggle"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "on",
+            "when": true,
+            "visual": {
+              "background": "#2f6f4f",
+              "label": {
+                "text": "Выражение",
+                "fontSize": 13
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.vts.set-expression",
+                  "params": {
+                    "mode": "toggle"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "animation",
+      "label": {
+        "en": "Animation",
+        "ru": "Анимация"
+      },
+      "description": {
+        "en": "Runs a hotkey and lights up while the animation it started is playing",
+        "ru": "Запускает хоткей и подсвечивается, пока идёт запущенная им анимация"
+      },
+      "button": {
+        "stateFrom": "ed.vts.animation-active",
+        "states": [
+          {
+            "id": "idle",
+            "when": false,
+            "visual": {
+              "background": "#22303c",
+              "label": {
+                "text": "Анимация",
+                "fontSize": 13
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.vts.trigger-hotkey"
+                }
+              ]
+            }
+          },
+          {
+            "id": "playing",
+            "when": true,
+            "visual": {
+              "background": "#3d5a80",
+              "label": {
+                "text": "Анимация",
+                "fontSize": 13
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.vts.trigger-hotkey"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "model",
+      "label": {
+        "en": "Current model",
+        "ru": "Текущая модель"
+      },
+      "description": {
+        "en": "Shows which model is on screen",
+        "ru": "Показывает, какая модель на экране"
+      },
+      "button": {
+        "states": [
+          {
+            "id": "default",
+            "visual": {
+              "background": "#22303c",
+              "label": {
+                "text": "{{vts.model}}",
+                "fontSize": 12
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
