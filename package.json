@@ -1,0 +1,20 @@
+{
+  "name": "easydeck-plugins",
+  "private": true,
+  "description": "EasyDeck's plugins, one folder per plugin under its author. See the main repository's docs/plugin-distribution.md for how any of this travels",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-registry.mjs",
+    "typecheck": "pnpm -r run typecheck"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.3",
+    "typescript": "~5.9.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

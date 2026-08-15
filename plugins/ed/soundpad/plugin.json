@@ -1,0 +1,567 @@
+{
+  "id": "ed.soundpad",
+  "main": "main.mjs",
+  "name": {
+    "en": "Soundpad",
+    "ru": "Soundpad"
+  },
+  "description": {
+    "en": "Plays the sounds from your Soundpad list, and its volume",
+    "ru": "Проигрывает звуки из списка Soundpad и управляет его громкостью"
+  },
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "settings": [
+    {
+      "name": "enabled",
+      "type": "boolean",
+      "label": {
+        "en": "Connect to Soundpad",
+        "ru": "Подключаться к Soundpad"
+      },
+      "default": false,
+      "required": false,
+      "description": {
+        "en": "Soundpad needs no setting up: it always listens, and there is nothing to configure",
+        "ru": "Soundpad настраивать не нужно: он всегда слушает, настраивать нечего"
+      }
+    }
+  ],
+  "commands": [
+    {
+      "name": "reconnect",
+      "label": {
+        "en": "Reconnect",
+        "ru": "Переподключиться"
+      },
+      "icon": "link"
+    }
+  ],
+  "variables": [
+    {
+      "name": "ed.soundpad.connected",
+      "type": "boolean",
+      "label": {
+        "en": "Soundpad connected",
+        "ru": "Soundpad подключён"
+      },
+      "initial": false
+    },
+    {
+      "name": "ed.soundpad.status",
+      "type": "string",
+      "label": {
+        "en": "What playback is doing",
+        "ru": "Что с воспроизведением"
+      },
+      "description": {
+        "en": "stopped, playing, paused or seeking — compare against it to know which",
+        "ru": "«stopped», «playing», «paused» или «seeking» — сравнивайте, чтобы узнать"
+      }
+    },
+    {
+      "name": "ed.soundpad.playing",
+      "type": "boolean",
+      "label": {
+        "en": "A sound is playing",
+        "ru": "Звук играет"
+      },
+      "initial": false
+    },
+    {
+      "name": "ed.soundpad.volume",
+      "type": "number",
+      "label": {
+        "en": "Volume, %",
+        "ru": "Громкость, %"
+      },
+      "initial": 0
+    },
+    {
+      "name": "ed.soundpad.muted",
+      "type": "boolean",
+      "label": {
+        "en": "Muted",
+        "ru": "Звук выключен"
+      },
+      "initial": false
+    },
+    {
+      "name": "ed.soundpad.sound-count",
+      "type": "number",
+      "label": {
+        "en": "Sounds in the list",
+        "ru": "Звуков в списке"
+      },
+      "initial": 0
+    },
+    {
+      "name": "ed.soundpad.position",
+      "type": "string",
+      "label": {
+        "en": "Position",
+        "ru": "Позиция"
+      },
+      "initial": "0:00"
+    },
+    {
+      "name": "ed.soundpad.position-ms",
+      "type": "number",
+      "label": {
+        "en": "Position, ms",
+        "ru": "Позиция, мс"
+      },
+      "description": {
+        "en": "The number behind the position, for a handler to compare against",
+        "ru": "Число за позицией — чтобы обработчик мог его сравнить"
+      },
+      "initial": 0
+    },
+    {
+      "name": "ed.soundpad.duration",
+      "type": "string",
+      "label": {
+        "en": "Length",
+        "ru": "Длительность"
+      },
+      "initial": "0:00"
+    },
+    {
+      "name": "ed.soundpad.duration-ms",
+      "type": "number",
+      "label": {
+        "en": "Length, ms",
+        "ru": "Длительность, мс"
+      },
+      "initial": 0
+    }
+  ],
+  "actions": [
+    {
+      "type": "ed.soundpad.play",
+      "icon": "play-pause",
+      "label": {
+        "en": "Play a sound",
+        "ru": "Проиграть звук"
+      },
+      "description": {
+        "en": "Held by name, so rearranging your Soundpad list does not change what a key plays",
+        "ru": "Хранится по названию — поэтому перетаскивание списка в Soundpad не меняет, что играет клавиша"
+      },
+      "params": [
+        {
+          "name": "sound",
+          "type": "select",
+          "optionsFrom": "sounds",
+          "label": {
+            "en": "Sound",
+            "ru": "Звук"
+          },
+          "placeholder": {
+            "en": "Name, tag or file name",
+            "ru": "Название, тег или имя файла"
+          }
+        },
+        {
+          "name": "lines",
+          "type": "select",
+          "label": {
+            "en": "Where to play it",
+            "ru": "Куда проигрывать"
+          },
+          "default": "",
+          "required": false,
+          "options": [
+            {
+              "value": "",
+              "label": {
+                "en": "As Soundpad is set up",
+                "ru": "Как настроено в Soundpad"
+              }
+            },
+            {
+              "value": "both",
+              "label": {
+                "en": "Speakers and microphone",
+                "ru": "В колонки и в микрофон"
+              }
+            },
+            {
+              "value": "speakers",
+              "label": {
+                "en": "Speakers only",
+                "ru": "Только в колонки"
+              }
+            },
+            {
+              "value": "microphone",
+              "label": {
+                "en": "Microphone only",
+                "ru": "Только в микрофон"
+              }
+            }
+          ]
+        }
+      ],
+      "group": {
+        "en": "Sounds",
+        "ru": "Звуки"
+      }
+    },
+    {
+      "type": "ed.soundpad.play-random",
+      "icon": "cycle",
+      "label": {
+        "en": "Play a random sound",
+        "ru": "Проиграть случайный звук"
+      },
+      "params": [],
+      "group": {
+        "en": "Sounds",
+        "ru": "Звуки"
+      }
+    },
+    {
+      "type": "ed.soundpad.play-previous",
+      "icon": "previous",
+      "label": {
+        "en": "Play the previous sound",
+        "ru": "Проиграть предыдущий звук"
+      },
+      "params": [],
+      "group": {
+        "en": "Sounds",
+        "ru": "Звуки"
+      }
+    },
+    {
+      "type": "ed.soundpad.play-next",
+      "icon": "next",
+      "label": {
+        "en": "Play the next sound",
+        "ru": "Проиграть следующий звук"
+      },
+      "params": [],
+      "group": {
+        "en": "Sounds",
+        "ru": "Звуки"
+      }
+    },
+    {
+      "type": "ed.soundpad.stop",
+      "icon": "stop",
+      "label": {
+        "en": "Stop",
+        "ru": "Остановить"
+      },
+      "params": [],
+      "group": {
+        "en": "Sounds",
+        "ru": "Звуки"
+      }
+    },
+    {
+      "type": "ed.soundpad.toggle-pause",
+      "icon": "play-pause",
+      "label": {
+        "en": "Pause / resume",
+        "ru": "Пауза / продолжить"
+      },
+      "params": [],
+      "group": {
+        "en": "Sounds",
+        "ru": "Звуки"
+      }
+    },
+    {
+      "type": "ed.soundpad.seek",
+      "icon": "next",
+      "label": {
+        "en": "Seek",
+        "ru": "Перемотать"
+      },
+      "description": {
+        "en": "To a position in the sound, or by so much from where it is",
+        "ru": "На позицию в звуке или на столько-то от текущей"
+      },
+      "params": [
+        {
+          "name": "how",
+          "type": "select",
+          "label": {
+            "en": "How",
+            "ru": "Как"
+          },
+          "default": "by",
+          "options": [
+            {
+              "value": "by",
+              "label": {
+                "en": "By this much",
+                "ru": "На столько-то"
+              }
+            },
+            {
+              "value": "to",
+              "label": {
+                "en": "To this position",
+                "ru": "На эту позицию"
+              }
+            }
+          ]
+        },
+        {
+          "name": "seconds",
+          "type": "number",
+          "label": {
+            "en": "Seconds",
+            "ru": "Секунд"
+          },
+          "default": 5,
+          "min": -600,
+          "max": 600,
+          "description": {
+            "en": "A negative number goes backwards, where that means anything",
+            "ru": "Отрицательное число — назад, там где это имеет смысл"
+          }
+        }
+      ],
+      "group": {
+        "en": "Sounds",
+        "ru": "Звуки"
+      }
+    },
+    {
+      "type": "ed.soundpad.set-volume",
+      "icon": "volume-up",
+      "label": {
+        "en": "Set volume",
+        "ru": "Задать громкость"
+      },
+      "params": [
+        {
+          "name": "percent",
+          "type": "number",
+          "label": {
+            "en": "Volume, %",
+            "ru": "Громкость, %"
+          },
+          "default": 100,
+          "min": 0,
+          "max": 100
+        }
+      ],
+      "group": {
+        "en": "Volume",
+        "ru": "Громкость"
+      }
+    },
+    {
+      "type": "ed.soundpad.adjust-volume",
+      "icon": "volume-down",
+      "label": {
+        "en": "Change volume",
+        "ru": "Изменить громкость"
+      },
+      "description": {
+        "en": "Adds to the current volume; a negative number turns it down",
+        "ru": "Прибавляет к текущей громкости; отрицательное число убавляет"
+      },
+      "params": [
+        {
+          "name": "by",
+          "type": "number",
+          "label": {
+            "en": "Change, %",
+            "ru": "Изменение, %"
+          },
+          "default": -10,
+          "min": -100,
+          "max": 100
+        }
+      ],
+      "group": {
+        "en": "Volume",
+        "ru": "Громкость"
+      }
+    },
+    {
+      "type": "ed.soundpad.toggle-mute",
+      "icon": "mute",
+      "label": {
+        "en": "Mute / unmute",
+        "ru": "Выключить / включить звук"
+      },
+      "params": [],
+      "group": {
+        "en": "Volume",
+        "ru": "Громкость"
+      }
+    },
+    {
+      "type": "ed.soundpad.record",
+      "icon": "record",
+      "label": {
+        "en": "Recording",
+        "ru": "Запись"
+      },
+      "description": {
+        "en": "Soundpad cannot be asked whether it is recording, so this says which, not \"toggle\"",
+        "ru": "Soundpad нельзя спросить, идёт ли запись, поэтому здесь не «переключить», а что именно"
+      },
+      "params": [
+        {
+          "name": "do",
+          "type": "select",
+          "label": {
+            "en": "What to do",
+            "ru": "Что сделать"
+          },
+          "default": "start",
+          "options": [
+            {
+              "value": "start",
+              "label": {
+                "en": "Start recording",
+                "ru": "Начать запись"
+              }
+            },
+            {
+              "value": "stop",
+              "label": {
+                "en": "Stop recording",
+                "ru": "Остановить запись"
+              }
+            }
+          ]
+        }
+      ],
+      "group": {
+        "en": "Recording",
+        "ru": "Запись"
+      }
+    }
+  ],
+  "presets": [
+    {
+      "name": "stop",
+      "label": {
+        "en": "Stop",
+        "ru": "Остановить"
+      },
+      "description": {
+        "en": "Stops whatever is playing",
+        "ru": "Останавливает то, что играет"
+      },
+      "button": {
+        "states": [
+          {
+            "id": "default",
+            "visual": {
+              "background": "#3a1f1f",
+              "label": {
+                "text": "Стоп",
+                "color": "#ffffff",
+                "position": "bottom",
+                "fontSize": 14
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.soundpad.stop",
+                  "params": {}
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "random",
+      "label": {
+        "en": "Random sound",
+        "ru": "Случайный звук"
+      },
+      "description": {
+        "en": "Plays anything from the list, which is the best key on any soundboard",
+        "ru": "Играет что угодно из списка — лучшая клавиша любого саундборда"
+      },
+      "button": {
+        "states": [
+          {
+            "id": "default",
+            "visual": {
+              "background": "#1f3a4d",
+              "label": {
+                "text": "🎲",
+                "color": "#ffffff",
+                "position": "center",
+                "fontSize": 34
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.soundpad.play-random",
+                  "params": {}
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "mute",
+      "label": {
+        "en": "Mute",
+        "ru": "Заглушить"
+      },
+      "description": {
+        "en": "Goes dim while Soundpad is muted",
+        "ru": "Гаснет, пока звук Soundpad выключен"
+      },
+      "button": {
+        "stateFrom": "ed.soundpad.muted",
+        "states": [
+          {
+            "id": "on",
+            "when": false,
+            "visual": {
+              "background": "#1d2733",
+              "label": {
+                "text": "{{soundpad.volume}}%",
+                "color": "#ffffff",
+                "position": "bottom",
+                "fontSize": 14
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.soundpad.toggle-mute",
+                  "params": {}
+                }
+              ]
+            }
+          },
+          {
+            "id": "off",
+            "when": true,
+            "visual": {
+              "background": "#2a2f36",
+              "label": {
+                "text": "—",
+                "color": "#7d8590",
+                "position": "center",
+                "fontSize": 26
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
