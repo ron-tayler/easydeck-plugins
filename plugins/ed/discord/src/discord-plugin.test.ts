@@ -133,17 +133,17 @@ describe('the Discord plugin', () => {
       return status?.status === 'error' && /authoris/i.test(status.message?.en ?? '');
     });
 
-    assert.equal(bed.variables.get('discord.connected'), false);
+    assert.equal(bed.variables.get('ed.discord.connected'), false);
     await bed.dispose();
   });
 
   it('says who it is once it has a token, and reads the room', async () => {
     const bed = await bench({ token: TOKEN, channel: CHANNEL });
 
-    await bed.until('the connection', () => bed.variables.get('discord.connected') === true);
-    await bed.until('the channel', () => bed.variables.get('discord.channel') === 'Общий');
+    await bed.until('the connection', () => bed.variables.get('ed.discord.connected') === true);
+    await bed.until('the channel', () => bed.variables.get('ed.discord.channel') === 'Общий');
 
-    assert.equal(bed.variables.get('discord.members'), 2);
+    assert.equal(bed.variables.get('ed.discord.members'), 2);
     assert.equal(bed.runtime.status('ed.discord')?.status, 'ready');
     // The name Discord answered with, so the settings window can show it.
     assert.equal(bed.runtime.status('ed.discord')?.message?.en, 'Тестер');
@@ -153,13 +153,13 @@ describe('the Discord plugin', () => {
 
   it('mutes, and says so before Discord has confirmed it', async () => {
     const bed = await bench({ token: TOKEN, channel: CHANNEL });
-    await bed.until('the connection', () => bed.variables.get('discord.muted') === false);
+    await bed.until('the connection', () => bed.variables.get('ed.discord.muted') === false);
 
     await bed.run('ed.discord.mute', { mode: 'toggle' });
 
     // Published at once: the update event follows, and a key that waited for
     // a round trip would look broken.
-    assert.equal(bed.variables.get('discord.muted'), true);
+    assert.equal(bed.variables.get('ed.discord.muted'), true);
     assert.deepEqual(bed.sent().at(-1), { cmd: 'SET_VOICE_SETTINGS', args: { mute: true } });
 
     await bed.dispose();
@@ -167,21 +167,21 @@ describe('the Discord plugin', () => {
 
   it('reports the microphone as off when deafening turns it off', async () => {
     const bed = await bench({ token: TOKEN, channel: CHANNEL });
-    await bed.until('the connection', () => bed.variables.get('discord.deafened') === false);
+    await bed.until('the connection', () => bed.variables.get('ed.discord.deafened') === false);
 
     await bed.run('ed.discord.deafen', { mode: 'toggle' });
 
     // Discord mutes along with deafening. A key bound to the microphone must
     // not wait for the event to find that out.
-    assert.equal(bed.variables.get('discord.deafened'), true);
-    assert.equal(bed.variables.get('discord.muted'), true);
+    assert.equal(bed.variables.get('ed.discord.deafened'), true);
+    assert.equal(bed.variables.get('ed.discord.muted'), true);
 
     await bed.dispose();
   });
 
   it('keeps each volume inside the ceiling Discord allows it', async () => {
     const bed = await bench({ token: TOKEN, channel: CHANNEL });
-    await bed.until('the connection', () => bed.variables.get('discord.connected') === true);
+    await bed.until('the connection', () => bed.variables.get('ed.discord.connected') === true);
 
     // The microphone stops at 100 and the output goes to 200: Discord's own
     // limits, and it refuses rather than clamping.
@@ -199,7 +199,7 @@ describe('the Discord plugin', () => {
 
   it('leaves a channel by joining nothing at all', async () => {
     const bed = await bench({ token: TOKEN, channel: CHANNEL });
-    await bed.until('the connection', () => bed.variables.get('discord.connected') === true);
+    await bed.until('the connection', () => bed.variables.get('ed.discord.connected') === true);
 
     await bed.run('ed.discord.join', { channel: 'c-voice' });
     assert.deepEqual(bed.sent().at(-2), {
@@ -220,30 +220,30 @@ describe('the Discord plugin', () => {
 
   it('names who is talking, and knows when it is you', async () => {
     const bed = await bench({ token: TOKEN, channel: CHANNEL });
-    await bed.until('the channel', () => bed.variables.get('discord.members') === 2);
+    await bed.until('the channel', () => bed.variables.get('ed.discord.members') === 2);
 
     bed.discord.emit('SPEAKING_START', { user_id: 'friend' });
-    await bed.until('the neighbour', () => bed.variables.get('discord.speaking') === 'Сосед');
+    await bed.until('the neighbour', () => bed.variables.get('ed.discord.speaking') === 'Сосед');
     // Somebody else talking is not you talking.
-    assert.equal(bed.variables.get('discord.talking'), false);
+    assert.equal(bed.variables.get('ed.discord.talking'), false);
 
     bed.discord.emit('SPEAKING_START', { user_id: 'me' });
-    await bed.until('yourself', () => bed.variables.get('discord.talking') === true);
+    await bed.until('yourself', () => bed.variables.get('ed.discord.talking') === true);
     // Two at once, which is what a set is for.
-    assert.match(String(bed.variables.get('discord.speaking')), /Сосед/);
-    assert.match(String(bed.variables.get('discord.speaking')), /Тестер/);
+    assert.match(String(bed.variables.get('ed.discord.speaking')), /Сосед/);
+    assert.match(String(bed.variables.get('ed.discord.speaking')), /Тестер/);
 
     bed.discord.emit('SPEAKING_STOP', { user_id: 'friend' });
     bed.discord.emit('SPEAKING_STOP', { user_id: 'me' });
-    await bed.until('quiet', () => bed.variables.get('discord.speaking') === '');
-    assert.equal(bed.variables.get('discord.talking'), false);
+    await bed.until('quiet', () => bed.variables.get('ed.discord.speaking') === '');
+    assert.equal(bed.variables.get('ed.discord.talking'), false);
 
     await bed.dispose();
   });
 
   it('offers the voice channels and nothing else', async () => {
     const bed = await bench({ token: TOKEN, channel: CHANNEL });
-    await bed.until('the connection', () => bed.variables.get('discord.connected') === true);
+    await bed.until('the connection', () => bed.variables.get('ed.discord.connected') === true);
     await bed.until('the list', async () => (await bed.runtime.optionsFor('ed.discord', 'channels')).length > 0);
 
     const channels = await bed.runtime.optionsFor('ed.discord', 'channels');
@@ -276,6 +276,53 @@ describe('the Discord plugin', () => {
       const status = bed.runtime.status('ed.discord');
       return status?.status === 'error' && /Invalid access token/.test(status.message?.en ?? '');
     });
+
+    await bed.dispose();
+  });
+});
+
+describe('counting heads in a channel you are not in', () => {
+  it('answers for the channel named, and for the one you are in', async () => {
+    const bed = await bench({ token: TOKEN, channel: CHANNEL });
+    // A room somebody might go and join: four people, and we are in none of it.
+    bed.discord.rooms['c-other'] = { voice_states: [{}, {}, {}, {}] };
+
+    await bed.until('the channel', () => bed.variables.get('ed.discord.members') === 2);
+
+    /*
+     * Nothing is asked about a channel until a key asks.
+     *
+     * Otherwise showing one number would mean polling every voice channel of
+     * every server this person is in, for ever.
+     */
+    assert.equal(bed.discord.commands.some((command) => command.cmd === 'GET_CHANNEL'), false);
+
+    bed.runtime.setWatched(['ed.discord.members(c-other)']);
+    await bed.until('the other room', () => bed.variables.get('ed.discord.members(c-other)') === 4);
+
+    // And the bare name still means the room you are standing in.
+    assert.equal(bed.variables.get('ed.discord.members'), 2);
+
+    await bed.dispose();
+  });
+
+  it('clears a channel it can no longer see rather than leaving a stale number', async () => {
+    const bed = await bench({ token: TOKEN, channel: CHANNEL });
+    bed.discord.rooms['c-other'] = { voice_states: [{}] };
+    await bed.until('the connection', () => bed.variables.get('ed.discord.connected') === true);
+
+    bed.runtime.setWatched(['ed.discord.members(c-other)']);
+    await bed.until('the other room', () => bed.variables.get('ed.discord.members(c-other)') === 1);
+
+    // Deleted, renamed, or simply not visible to this account any more. A key
+    // showing yesterday's headcount is worse than one showing none.
+    delete bed.discord.rooms['c-other'];
+    // Asked again by way of a different list: the runtime tells a plugin only
+    // when what it watches has actually changed, which is the whole point of
+    // that bargain and not something to work around in the plugin.
+    bed.runtime.setWatched([]);
+    bed.runtime.setWatched(['ed.discord.members(c-other)']);
+    await bed.until('it to be cleared', () => bed.variables.get('ed.discord.members(c-other)') === 0);
 
     await bed.dispose();
   });

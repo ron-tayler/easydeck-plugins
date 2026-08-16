@@ -2,6 +2,7 @@ import {
   PLUGIN_API_VERSION,
   definePlugin,
   numberParam,
+  parseVariableKey,
   stringParam,
 } from '@easydeck/plugin-sdk';
 import type {
@@ -49,10 +50,20 @@ export const DISCORD_PLUGIN_ID = 'ed.discord';
  */
 const POLL_INTERVAL_MS = 15_000;
 
+/**
+ * The argument that means "whichever channel you are in".
+ *
+ * An empty one, because `variableKey` gives a family with no argument its
+ * bare name — which is what makes `{{ed.discord.members}}` a key somebody can
+ * write beside `{{ed.discord.members(1234)}}`.
+ */
+const NO_CHANNEL = '';
+
 export const discordManifest: PluginManifest = {
   id: DISCORD_PLUGIN_ID,
   name: { en: 'Discord', ru: 'Discord' },
   author: { en: 'EasyDeck', ru: 'EasyDeck' },
+  cover: "plugin:ed.discord/assets/logo.webp",
   description: {
     en: 'Mute, deafen, voice channels and who is talking',
     ru: 'Микрофон, наушники, голосовые каналы и кто говорит',
@@ -129,50 +140,83 @@ export const discordManifest: PluginManifest = {
 
   variables: [
     {
-      name: 'discord.connected',
+      name: 'ed.discord.connected',
       type: 'boolean',
       label: { en: 'Discord connected', ru: 'Discord подключён' },
       initial: false,
     },
     {
-      name: 'discord.muted',
+      name: 'ed.discord.muted',
       type: 'boolean',
       label: { en: 'Microphone muted', ru: 'Микрофон выключен' },
       initial: false,
     },
     {
-      name: 'discord.deafened',
+      name: 'ed.discord.deafened',
       type: 'boolean',
       label: { en: 'Deafened', ru: 'Звук выключен' },
       initial: false,
     },
     {
-      name: 'discord.input-volume',
+      name: 'ed.discord.input-volume',
       type: 'number',
       label: { en: 'Microphone volume, %', ru: 'Громкость микрофона, %' },
     },
     {
-      name: 'discord.output-volume',
+      name: 'ed.discord.output-volume',
       type: 'number',
       label: { en: 'Output volume, %', ru: 'Громкость звука, %' },
     },
     {
-      name: 'discord.channel',
+      /*
+       * What a channel is called — and which channel is a question.
+       *
+       * With no argument it is the one you are in, and empty when you are in
+       * none, which is how a key knows to offer "join". With a channel named
+       * it is that channel's name as it is right now: a key labelled from
+       * this follows a rename instead of quietly lying about where it sends
+       * you.
+       */
+      name: 'ed.discord.channel',
       type: 'string',
       label: { en: 'Voice channel', ru: 'Голосовой канал' },
-      description: {
-        en: 'Empty when not in one, which is also how a key knows to say "join"',
-        ru: 'Пусто, когда вы не в канале — по этому клавиша и понимает, что предлагать вход',
+      argument: {
+        label: { en: 'Channel', ru: 'Канал' },
+        description: {
+          en: 'Leave empty for the channel you are in',
+          ru: 'Оставьте пустым для того канала, где вы сейчас',
+        },
+        optionsFrom: 'channels',
       },
     },
     {
-      name: 'discord.members',
+      /*
+       * How many people are in a channel — and which channel is a question.
+       *
+       * With no argument it is the one you are in, which is what a key beside
+       * the mute button wants. With a channel named, it is that channel
+       * whether or not you are in it, which is what a key that says "eight
+       * people are in Общий" wants — the one you press to go and join them.
+       *
+       * Only the channels a key actually asks about are watched: see
+       * `onWatched`. Otherwise every channel of every server would be polled
+       * so that one number could be shown.
+       */
+      name: 'ed.discord.members',
       type: 'number',
       label: { en: 'People in the channel', ru: 'Человек в канале' },
       initial: 0,
+      argument: {
+        label: { en: 'Channel', ru: 'Канал' },
+        description: {
+          en: 'Leave empty for the channel you are in',
+          ru: 'Оставьте пустым для того канала, где вы сейчас',
+        },
+        optionsFrom: 'channels',
+      },
     },
     {
-      name: 'discord.speaking',
+      name: 'ed.discord.speaking',
       type: 'string',
       label: { en: 'Who is talking', ru: 'Кто говорит' },
       description: {
@@ -187,7 +231,7 @@ export const discordManifest: PluginManifest = {
        * A key that lights up while you hold push-to-talk binds to this; a key
        * showing the room binds to the one above.
        */
-      name: 'discord.talking',
+      name: 'ed.discord.talking',
       type: 'boolean',
       label: { en: 'You are talking', ru: 'Вы говорите' },
       initial: false,
@@ -349,7 +393,7 @@ export const discordManifest: PluginManifest = {
       name: 'mute',
       label: { en: 'Microphone', ru: 'Микрофон' },
       button: {
-        stateFrom: 'discord.muted',
+        stateFrom: 'ed.discord.muted',
         states: [
           {
             id: 'live',
@@ -370,7 +414,7 @@ export const discordManifest: PluginManifest = {
       name: 'deafen',
       label: { en: 'Deafen', ru: 'Оглушить' },
       button: {
-        stateFrom: 'discord.deafened',
+        stateFrom: 'ed.discord.deafened',
         states: [
           {
             id: 'hearing',
@@ -401,7 +445,7 @@ export const discordManifest: PluginManifest = {
             visual: {
               background: '#1a1c22',
               label: {
-                text: '{{discord.channel}}\n{{discord.members}}',
+                text: '{{ed.discord.channel}}\n{{ed.discord.members}}',
                 fontSize: 12,
                 position: 'center',
               },
@@ -419,7 +463,7 @@ export const discordManifest: PluginManifest = {
             id: 'default',
             visual: {
               background: '#1a1c22',
-              label: { text: '{{discord.speaking}}', fontSize: 11, position: 'center' },
+              label: { text: '{{ed.discord.speaking}}', fontSize: 11, position: 'center' },
             },
           },
         ],
@@ -455,6 +499,14 @@ export class DiscordPlugin implements Plugin {
   private readonly talking = new Set<string>();
   /** Channels offered by the picker, gathered from the servers we can see. */
   private channels: ParamOption[] = [];
+  /**
+   * Channels some key is showing a headcount for, and therefore the only ones
+   * asked about.
+   *
+   * The bargain `onWatched` exists for: without it, showing one number would
+   * mean polling every voice channel of every server this person is in.
+   */
+  private watching: readonly string[] = [];
 
   /** True while this plugin is writing a setting itself; see `connect`. */
   private storingToken = false;
@@ -467,6 +519,28 @@ export class DiscordPlugin implements Plugin {
     host.onSettingsChanged(() => {
       if (this.storingToken) return;
       this.connect();
+    });
+
+    host.onWatched((keys) => {
+      // Both families ask about a channel, and one question answers both, so
+      // what is collected is the set of channels rather than of keys.
+      this.watching = [
+        ...new Set(
+          keys
+            .map((key) => parseVariableKey(key))
+            .filter(
+              (parsed) =>
+                (parsed.family === 'ed.discord.members' ||
+                  parsed.family === 'ed.discord.channel') &&
+                parsed.argument,
+            )
+            .map((parsed) => parsed.argument!),
+        ),
+      ];
+
+      // Read at once rather than at the next tick: a key added while Discord
+      // is running should start showing something immediately.
+      if (this.ipc?.connected) void this.readWatched();
     });
 
     host.provideOptions('channels', async () => this.channels);
@@ -482,7 +556,9 @@ export class DiscordPlugin implements Plugin {
      * failed quietly — without asking Discord anything most of the time.
      */
     host.update(POLL_INTERVAL_MS, async () => {
-      if (this.ipc?.connected) await this.readChannel();
+      if (!this.ipc?.connected) return;
+      await this.readChannel();
+      await this.readWatched();
     });
   }
 
@@ -571,7 +647,7 @@ export class DiscordPlugin implements Plugin {
 
     if (state !== 'ready') {
       host.setStatus(state === 'error' ? 'error' : 'connecting', message ? { en: message } : undefined);
-      host.setVariable('discord.connected', false);
+      host.setVariable('ed.discord.connected', false);
       if (state === 'error') this.clearVariables();
       return;
     }
@@ -600,12 +676,17 @@ export class DiscordPlugin implements Plugin {
       this.me = who.userId;
 
       host.setStatus('ready', who.name ? { en: who.name } : undefined);
-      host.setVariable('discord.connected', true);
+      host.setVariable('ed.discord.connected', true);
 
       await this.watch();
       await this.readVoiceSettings();
       await this.readChannel();
       await this.readChannels();
+      // Keys watching a channel by name were told to us before there was a
+      // connection to ask through. Without this they show nothing until the
+      // slow tick comes round, which on a deck that has just started is a
+      // quarter of a minute of blank keys.
+      await this.readWatched();
     } catch (cause) {
       // A token that stopped working is the common case here — revoked in
       // Discord's settings, or the application's secret changed.
@@ -613,7 +694,7 @@ export class DiscordPlugin implements Plugin {
         en: `Discord refused the token: ${describe(cause)} — press Authorise again`,
         ru: `Discord отклонил токен: ${describe(cause)} — нажмите «Авторизовать» ещё раз`,
       });
-      host.setVariable('discord.connected', false);
+      host.setVariable('ed.discord.connected', false);
     }
   }
 
@@ -700,11 +781,11 @@ export class DiscordPlugin implements Plugin {
     const input = data['input'] as { volume?: number } | undefined;
     const output = data['output'] as { volume?: number } | undefined;
 
-    host.setVariable('discord.muted', data['mute'] === true);
-    host.setVariable('discord.deafened', data['deaf'] === true);
-    if (input?.volume !== undefined) host.setVariable('discord.input-volume', Math.round(input.volume));
+    host.setVariable('ed.discord.muted', data['mute'] === true);
+    host.setVariable('ed.discord.deafened', data['deaf'] === true);
+    if (input?.volume !== undefined) host.setVariable('ed.discord.input-volume', Math.round(input.volume));
     if (output?.volume !== undefined) {
-      host.setVariable('discord.output-volume', Math.round(output.volume));
+      host.setVariable('ed.discord.output-volume', Math.round(output.volume));
     }
   }
 
@@ -737,8 +818,19 @@ export class DiscordPlugin implements Plugin {
         name: String(state.nick ?? state.user?.global_name ?? state.user?.username ?? ''),
       }));
 
-      host.setVariable('discord.channel', String(channel?.name ?? ''));
-      host.setVariable('discord.members', this.members.length);
+      // No argument means "the channel you are in", which `variableKey` gives
+      // a family its bare name for.
+      host.setFamily('ed.discord.channel', NO_CHANNEL, String(channel?.name ?? ''));
+      // No argument means "the channel you are in", which `variableKey` gives
+      // a family its bare name for.
+      host.setFamily('ed.discord.members', NO_CHANNEL, this.members.length);
+
+      // And if a key happens to be watching this very channel by name, it is
+      // the same answer and should not wait for the next tick.
+      if (id !== '') {
+        host.setFamily('ed.discord.members', id, this.members.length);
+        host.setFamily('ed.discord.channel', id, String(channel?.name ?? ''));
+      }
 
       if (id !== previous) {
         // Talking is about a room, and the room changed.
@@ -748,6 +840,38 @@ export class DiscordPlugin implements Plugin {
       }
     } catch (cause) {
       this.host?.log('warn', `Could not read the voice channel: ${describe(cause)}`);
+    }
+  }
+
+  /**
+   * How many people are in each channel a key is asking about.
+   *
+   * One question per channel, and only for channels on screen. A channel that
+   * cannot be read — no longer there, or not visible to this account — is
+   * cleared rather than left showing yesterday's number, which is the one
+   * thing worse than showing none.
+   */
+  private async readWatched(): Promise<void> {
+    const host = this.require();
+    const ipc = this.ipc;
+    if (!ipc?.connected) return;
+
+    for (const channelId of this.watching) {
+      try {
+        const channel = await ipc.command<{ name?: string; voice_states?: unknown[] }>(
+          'GET_CHANNEL',
+          { channel_id: channelId },
+        );
+
+        // The name as well as the count, from the one question: a key labelled
+        // with a channel should follow a rename rather than keep the name it
+        // was set up with.
+        host.setFamily('ed.discord.members', channelId, (channel.voice_states ?? []).length);
+        host.setFamily('ed.discord.channel', channelId, String(channel.name ?? ''));
+      } catch {
+        host.setFamily('ed.discord.members', channelId, undefined);
+        host.setFamily('ed.discord.channel', channelId, undefined);
+      }
     }
   }
 
@@ -801,8 +925,8 @@ export class DiscordPlugin implements Plugin {
       .map((id) => this.members.find((member) => member.id === id)?.name ?? '')
       .filter((name) => name !== '');
 
-    host.setVariable('discord.speaking', names.join(', '));
-    host.setVariable('discord.talking', this.me !== '' && this.talking.has(this.me));
+    host.setVariable('ed.discord.speaking', names.join(', '));
+    host.setVariable('ed.discord.talking', this.me !== '' && this.talking.has(this.me));
   }
 
   private clearVariables(): void {
@@ -814,18 +938,23 @@ export class DiscordPlugin implements Plugin {
     this.channelId = '';
 
     for (const name of [
-      'discord.connected',
-      'discord.muted',
-      'discord.deafened',
-      'discord.input-volume',
-      'discord.output-volume',
-      'discord.channel',
-      'discord.speaking',
-      'discord.talking',
+      'ed.discord.connected',
+      'ed.discord.muted',
+      'ed.discord.deafened',
+      'ed.discord.input-volume',
+      'ed.discord.output-volume',
+      'ed.discord.speaking',
+      'ed.discord.talking',
     ]) {
       host.setVariable(name, undefined);
     }
-    host.setVariable('discord.members', 0);
+
+    host.setFamily('ed.discord.members', NO_CHANNEL, 0);
+    host.setFamily('ed.discord.channel', NO_CHANNEL, undefined);
+    for (const channelId of this.watching) {
+      host.setFamily('ed.discord.members', channelId, undefined);
+      host.setFamily('ed.discord.channel', channelId, undefined);
+    }
   }
 
   // --- acting ---------------------------------------------------------------
@@ -840,7 +969,7 @@ export class DiscordPlugin implements Plugin {
         await this.require4().command('SET_VOICE_SETTINGS', { mute });
         // Published at once rather than waited for: the update event follows,
         // but a key that took a round trip to change looks broken.
-        this.require().setVariable('discord.muted', mute);
+        this.require().setVariable('ed.discord.muted', mute);
       },
 
       'ed.discord.deafen': async (params) => {
@@ -849,12 +978,12 @@ export class DiscordPlugin implements Plugin {
         const deaf = mode === 'toggle' ? current.deaf !== true : mode === 'on';
 
         await this.require4().command('SET_VOICE_SETTINGS', { deaf });
-        this.require().setVariable('discord.deafened', deaf);
+        this.require().setVariable('ed.discord.deafened', deaf);
 
         // Discord mutes the microphone along with deafening, and says so in
         // the event that follows — but a key bound to the microphone should
         // not wait for it.
-        if (deaf) this.require().setVariable('discord.muted', true);
+        if (deaf) this.require().setVariable('ed.discord.muted', true);
       },
 
       'ed.discord.volume': async (params) => {
@@ -874,7 +1003,7 @@ export class DiscordPlugin implements Plugin {
         const volume = Math.round(Math.max(0, Math.min(ceiling, wanted)));
 
         await this.require4().command('SET_VOICE_SETTINGS', { [which]: { volume } });
-        this.require().setVariable(`discord.${which}-volume`, volume);
+        this.require().setVariable(`ed.discord.${which}-volume`, volume);
       },
 
       'ed.discord.join': async (params) => {

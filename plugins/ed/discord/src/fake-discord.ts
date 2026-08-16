@@ -52,6 +52,8 @@ export class FakeDiscord {
 
   voice: VoiceSettings;
   channel?: FakeChannel;
+  /** Channels this account can look into, by id. */
+  rooms: Record<string, { voice_states: unknown[] }> = {};
 
   constructor(private readonly options: FakeDiscordOptions = {}) {
     this.voice = options.voice ?? { mute: false, deaf: false, input: { volume: 100 }, output: { volume: 100 } };
@@ -164,6 +166,15 @@ export class FakeDiscord {
 
       case 'GET_SELECTED_VOICE_CHANNEL':
         return this.channel ? { ...this.channel } : {};
+
+      /*
+       * Any channel, whether or not this person is in it.
+       *
+       * Which is what a headcount for a channel somebody has not joined is
+       * made of — the one the plugin polls for `discord.members(<id>)`.
+       */
+      case 'GET_CHANNEL':
+        return this.rooms[String(args['channel_id'] ?? '')] ?? {};
 
       case 'SELECT_VOICE_CHANNEL':
         return this.channel ? { ...this.channel } : {};

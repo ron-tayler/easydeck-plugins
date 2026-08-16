@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-16T13:22:39.256Z",
+  "generated": "2026-08-16T13:53:32.563Z",
   "plugins": [
     {
       "id": "ed.discord",
@@ -7,8 +7,8 @@
       "version": "1.0.0",
       "apiVersion": 1,
       "file": "ed.discord.easydeck",
-      "sha256": "18b2a5e1bfc8b31e8ff763d892122cba727c3738b265e7f43a46e99d957ccfef",
-      "bytes": 14694,
+      "sha256": "c65f33ae1987fadedcd56ff37f0c570370a27403150041b5e7709b7e47d2d232",
+      "bytes": 25485,
       "name": {
         "en": "Discord",
         "ru": "Discord"
@@ -21,6 +21,7 @@
         "en": "EasyDeck",
         "ru": "EasyDeck"
       },
+      "cover": "plugin:ed.discord/assets/logo.webp",
       "manifest": {
         "name": {
           "en": "Discord",
@@ -30,6 +31,7 @@
           "en": "EasyDeck",
           "ru": "EasyDeck"
         },
+        "cover": "plugin:ed.discord/assets/logo.webp",
         "description": {
           "en": "Mute, deafen, voice channels and who is talking",
           "ru": "Микрофон, наушники, голосовые каналы и кто говорит"
@@ -110,7 +112,7 @@
         ],
         "variables": [
           {
-            "name": "discord.connected",
+            "name": "ed.discord.connected",
             "type": "boolean",
             "label": {
               "en": "Discord connected",
@@ -119,7 +121,7 @@
             "initial": false
           },
           {
-            "name": "discord.muted",
+            "name": "ed.discord.muted",
             "type": "boolean",
             "label": {
               "en": "Microphone muted",
@@ -128,7 +130,7 @@
             "initial": false
           },
           {
-            "name": "discord.deafened",
+            "name": "ed.discord.deafened",
             "type": "boolean",
             "label": {
               "en": "Deafened",
@@ -137,7 +139,7 @@
             "initial": false
           },
           {
-            "name": "discord.input-volume",
+            "name": "ed.discord.input-volume",
             "type": "number",
             "label": {
               "en": "Microphone volume, %",
@@ -145,7 +147,7 @@
             }
           },
           {
-            "name": "discord.output-volume",
+            "name": "ed.discord.output-volume",
             "type": "number",
             "label": {
               "en": "Output volume, %",
@@ -153,28 +155,46 @@
             }
           },
           {
-            "name": "discord.channel",
+            "name": "ed.discord.channel",
             "type": "string",
             "label": {
               "en": "Voice channel",
               "ru": "Голосовой канал"
             },
-            "description": {
-              "en": "Empty when not in one, which is also how a key knows to say \"join\"",
-              "ru": "Пусто, когда вы не в канале — по этому клавиша и понимает, что предлагать вход"
+            "argument": {
+              "label": {
+                "en": "Channel",
+                "ru": "Канал"
+              },
+              "description": {
+                "en": "Leave empty for the channel you are in",
+                "ru": "Оставьте пустым для того канала, где вы сейчас"
+              },
+              "optionsFrom": "channels"
             }
           },
           {
-            "name": "discord.members",
+            "name": "ed.discord.members",
             "type": "number",
             "label": {
               "en": "People in the channel",
               "ru": "Человек в канале"
             },
-            "initial": 0
+            "initial": 0,
+            "argument": {
+              "label": {
+                "en": "Channel",
+                "ru": "Канал"
+              },
+              "description": {
+                "en": "Leave empty for the channel you are in",
+                "ru": "Оставьте пустым для того канала, где вы сейчас"
+              },
+              "optionsFrom": "channels"
+            }
           },
           {
-            "name": "discord.speaking",
+            "name": "ed.discord.speaking",
             "type": "string",
             "label": {
               "en": "Who is talking",
@@ -186,7 +206,7 @@
             }
           },
           {
-            "name": "discord.talking",
+            "name": "ed.discord.talking",
             "type": "boolean",
             "label": {
               "en": "You are talking",
@@ -478,7 +498,7 @@
               "ru": "Микрофон"
             },
             "button": {
-              "stateFrom": "discord.muted",
+              "stateFrom": "ed.discord.muted",
               "states": [
                 {
                   "id": "live",
@@ -534,7 +554,7 @@
               "ru": "Оглушить"
             },
             "button": {
-              "stateFrom": "discord.deafened",
+              "stateFrom": "ed.discord.deafened",
               "states": [
                 {
                   "id": "hearing",
@@ -600,7 +620,7 @@
                   "visual": {
                     "background": "#1a1c22",
                     "label": {
-                      "text": "{{discord.channel}}\n{{discord.members}}",
+                      "text": "{{ed.discord.channel}}\n{{ed.discord.members}}",
                       "fontSize": 12,
                       "position": "center"
                     }
@@ -622,7 +642,7 @@
                   "visual": {
                     "background": "#1a1c22",
                     "label": {
-                      "text": "{{discord.speaking}}",
+                      "text": "{{ed.discord.speaking}}",
                       "fontSize": 11,
                       "position": "center"
                     }
@@ -632,7 +652,9 @@
             }
           }
         ]
-      }
+      },
+      "coverPath": "assets/logo.webp",
+      "coverFile": "D:\\dev\\easydeck-plugins\\build\\ed.discord\\assets\\logo.webp"
     },
     {
       "id": "ed.obs",
