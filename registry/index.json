@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-16T13:15:58.358Z",
+  "generated": "2026-08-16T13:22:39.256Z",
   "plugins": [
     {
       "id": "ed.discord",
@@ -20,6 +20,618 @@
       "by": {
         "en": "EasyDeck",
         "ru": "EasyDeck"
+      },
+      "manifest": {
+        "name": {
+          "en": "Discord",
+          "ru": "Discord"
+        },
+        "author": {
+          "en": "EasyDeck",
+          "ru": "EasyDeck"
+        },
+        "description": {
+          "en": "Mute, deafen, voice channels and who is talking",
+          "ru": "Микрофон, наушники, голосовые каналы и кто говорит"
+        },
+        "version": "1.0.0",
+        "apiVersion": 1,
+        "settings": [
+          {
+            "name": "enabled",
+            "type": "boolean",
+            "label": {
+              "en": "Connect to Discord",
+              "ru": "Подключаться к Discord"
+            },
+            "default": false,
+            "required": false
+          },
+          {
+            "name": "clientId",
+            "type": "string",
+            "required": false,
+            "label": {
+              "en": "Application ID",
+              "ru": "ID приложения"
+            },
+            "description": {
+              "en": "From discord.com/developers — make an application, and add http://localhost to its OAuth2 redirects. Discord only allows RPC for an app's own owner, which is why this is yours rather than ours",
+              "ru": "С discord.com/developers — создайте приложение и добавьте http://localhost в его OAuth2-редиректы. Discord пускает в RPC только владельца приложения, поэтому оно ваше, а не наше"
+            }
+          },
+          {
+            "name": "clientSecret",
+            "type": "string",
+            "secret": true,
+            "required": false,
+            "label": {
+              "en": "Client secret",
+              "ru": "Client secret"
+            },
+            "description": {
+              "en": "From the OAuth2 page of the same application",
+              "ru": "Со страницы OAuth2 того же приложения"
+            }
+          },
+          {
+            "name": "token",
+            "type": "string",
+            "secret": true,
+            "internal": true,
+            "required": false,
+            "label": {
+              "en": "Access token",
+              "ru": "Токен доступа"
+            }
+          }
+        ],
+        "commands": [
+          {
+            "name": "authorise",
+            "label": {
+              "en": "Authorise",
+              "ru": "Авторизовать"
+            },
+            "icon": "link",
+            "description": {
+              "en": "Discord will ask you to allow the application — switch to it and press Authorize",
+              "ru": "Discord попросит разрешить приложение — переключитесь в него и нажмите «Авторизовать»"
+            }
+          },
+          {
+            "name": "reconnect",
+            "label": {
+              "en": "Reconnect",
+              "ru": "Переподключиться"
+            },
+            "icon": "link"
+          }
+        ],
+        "variables": [
+          {
+            "name": "discord.connected",
+            "type": "boolean",
+            "label": {
+              "en": "Discord connected",
+              "ru": "Discord подключён"
+            },
+            "initial": false
+          },
+          {
+            "name": "discord.muted",
+            "type": "boolean",
+            "label": {
+              "en": "Microphone muted",
+              "ru": "Микрофон выключен"
+            },
+            "initial": false
+          },
+          {
+            "name": "discord.deafened",
+            "type": "boolean",
+            "label": {
+              "en": "Deafened",
+              "ru": "Звук выключен"
+            },
+            "initial": false
+          },
+          {
+            "name": "discord.input-volume",
+            "type": "number",
+            "label": {
+              "en": "Microphone volume, %",
+              "ru": "Громкость микрофона, %"
+            }
+          },
+          {
+            "name": "discord.output-volume",
+            "type": "number",
+            "label": {
+              "en": "Output volume, %",
+              "ru": "Громкость звука, %"
+            }
+          },
+          {
+            "name": "discord.channel",
+            "type": "string",
+            "label": {
+              "en": "Voice channel",
+              "ru": "Голосовой канал"
+            },
+            "description": {
+              "en": "Empty when not in one, which is also how a key knows to say \"join\"",
+              "ru": "Пусто, когда вы не в канале — по этому клавиша и понимает, что предлагать вход"
+            }
+          },
+          {
+            "name": "discord.members",
+            "type": "number",
+            "label": {
+              "en": "People in the channel",
+              "ru": "Человек в канале"
+            },
+            "initial": 0
+          },
+          {
+            "name": "discord.speaking",
+            "type": "string",
+            "label": {
+              "en": "Who is talking",
+              "ru": "Кто говорит"
+            },
+            "description": {
+              "en": "The names of everyone talking right now, or empty when the channel is quiet",
+              "ru": "Имена всех, кто говорит сейчас; пусто, когда в канале тихо"
+            }
+          },
+          {
+            "name": "discord.talking",
+            "type": "boolean",
+            "label": {
+              "en": "You are talking",
+              "ru": "Вы говорите"
+            },
+            "initial": false
+          }
+        ],
+        "actions": [
+          {
+            "type": "ed.discord.mute",
+            "icon": "mute",
+            "label": {
+              "en": "Microphone",
+              "ru": "Микрофон"
+            },
+            "params": [
+              {
+                "name": "mode",
+                "type": "select",
+                "default": "toggle",
+                "label": {
+                  "en": "What to do",
+                  "ru": "Что сделать"
+                },
+                "options": [
+                  {
+                    "value": "toggle",
+                    "label": {
+                      "en": "Toggle",
+                      "ru": "Переключить"
+                    }
+                  },
+                  {
+                    "value": "on",
+                    "label": {
+                      "en": "Mute",
+                      "ru": "Выключить"
+                    }
+                  },
+                  {
+                    "value": "off",
+                    "label": {
+                      "en": "Unmute",
+                      "ru": "Включить"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "ed.discord.deafen",
+            "icon": "speaker",
+            "label": {
+              "en": "Deafen",
+              "ru": "Оглушить"
+            },
+            "description": {
+              "en": "Turns your own sound off. Discord mutes the microphone with it, and this reports that",
+              "ru": "Выключает звук у вас. Discord заодно выключает микрофон, и плагин это показывает"
+            },
+            "params": [
+              {
+                "name": "mode",
+                "type": "select",
+                "default": "toggle",
+                "label": {
+                  "en": "What to do",
+                  "ru": "Что сделать"
+                },
+                "options": [
+                  {
+                    "value": "toggle",
+                    "label": {
+                      "en": "Toggle",
+                      "ru": "Переключить"
+                    }
+                  },
+                  {
+                    "value": "on",
+                    "label": {
+                      "en": "Deafen",
+                      "ru": "Оглушить"
+                    }
+                  },
+                  {
+                    "value": "off",
+                    "label": {
+                      "en": "Undeafen",
+                      "ru": "Вернуть звук"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "ed.discord.volume",
+            "icon": "increment",
+            "label": {
+              "en": "Volume",
+              "ru": "Громкость"
+            },
+            "params": [
+              {
+                "name": "which",
+                "type": "select",
+                "default": "input",
+                "label": {
+                  "en": "Which",
+                  "ru": "Чего"
+                },
+                "options": [
+                  {
+                    "value": "input",
+                    "label": {
+                      "en": "Microphone",
+                      "ru": "Микрофона"
+                    }
+                  },
+                  {
+                    "value": "output",
+                    "label": {
+                      "en": "Sound",
+                      "ru": "Звука"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "mode",
+                "type": "select",
+                "default": "up",
+                "label": {
+                  "en": "What to do",
+                  "ru": "Что сделать"
+                },
+                "options": [
+                  {
+                    "value": "up",
+                    "label": {
+                      "en": "Louder",
+                      "ru": "Громче"
+                    }
+                  },
+                  {
+                    "value": "down",
+                    "label": {
+                      "en": "Quieter",
+                      "ru": "Тише"
+                    }
+                  },
+                  {
+                    "value": "set",
+                    "label": {
+                      "en": "Set to",
+                      "ru": "Задать"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "value",
+                "type": "number",
+                "default": 10,
+                "min": 0,
+                "max": 200,
+                "label": {
+                  "en": "Per cent",
+                  "ru": "Проценты"
+                },
+                "description": {
+                  "en": "Discord allows up to 200 for output, and 100 for the microphone",
+                  "ru": "Discord разрешает до 200 для звука и до 100 для микрофона"
+                }
+              }
+            ]
+          },
+          {
+            "type": "ed.discord.join",
+            "icon": "app",
+            "label": {
+              "en": "Join a voice channel",
+              "ru": "Войти в голосовой канал"
+            },
+            "description": {
+              "en": "Pick a channel you can see. Leaving is the same action with nothing chosen",
+              "ru": "Выберите канал из доступных. Выход — это же действие с пустым выбором"
+            },
+            "params": [
+              {
+                "name": "channel",
+                "type": "select",
+                "required": false,
+                "label": {
+                  "en": "Channel",
+                  "ru": "Канал"
+                },
+                "optionsFrom": "channels",
+                "emptyNote": {
+                  "en": "No voice channels — authorise first, and be in a server that has some",
+                  "ru": "Голосовых каналов нет — сначала авторизуйтесь и будьте на сервере, где они есть"
+                },
+                "description": {
+                  "en": "Empty means leave whichever channel you are in",
+                  "ru": "Пусто — выйти из того канала, где вы сейчас"
+                }
+              }
+            ]
+          },
+          {
+            "type": "ed.discord.user-volume",
+            "icon": "variable",
+            "label": {
+              "en": "Someone's volume",
+              "ru": "Громкость собеседника"
+            },
+            "description": {
+              "en": "Turns one person up, down, or off — for you only",
+              "ru": "Делает одного человека громче, тише или беззвучным — только у вас"
+            },
+            "params": [
+              {
+                "name": "user",
+                "type": "select",
+                "label": {
+                  "en": "Who",
+                  "ru": "Кто"
+                },
+                "optionsFrom": "members",
+                "emptyNote": {
+                  "en": "Nobody to list — this offers the people in your channel right now",
+                  "ru": "Некого перечислять — здесь те, кто сейчас в вашем канале"
+                }
+              },
+              {
+                "name": "mode",
+                "type": "select",
+                "default": "set",
+                "label": {
+                  "en": "What to do",
+                  "ru": "Что сделать"
+                },
+                "options": [
+                  {
+                    "value": "set",
+                    "label": {
+                      "en": "Set volume",
+                      "ru": "Задать громкость"
+                    }
+                  },
+                  {
+                    "value": "mute",
+                    "label": {
+                      "en": "Mute them",
+                      "ru": "Заглушить"
+                    }
+                  },
+                  {
+                    "value": "unmute",
+                    "label": {
+                      "en": "Unmute them",
+                      "ru": "Вернуть звук"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "value",
+                "type": "number",
+                "default": 100,
+                "min": 0,
+                "max": 200,
+                "required": false,
+                "label": {
+                  "en": "Per cent",
+                  "ru": "Проценты"
+                }
+              }
+            ]
+          }
+        ],
+        "presets": [
+          {
+            "name": "mute",
+            "label": {
+              "en": "Microphone",
+              "ru": "Микрофон"
+            },
+            "button": {
+              "stateFrom": "discord.muted",
+              "states": [
+                {
+                  "id": "live",
+                  "when": false,
+                  "visual": {
+                    "background": "#2f6f4f",
+                    "label": {
+                      "text": "Микрофон",
+                      "fontSize": 13,
+                      "position": "center"
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.discord.mute",
+                        "params": {
+                          "mode": "toggle"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "muted",
+                  "when": true,
+                  "visual": {
+                    "background": "#6f3535",
+                    "label": {
+                      "text": "Выключен",
+                      "fontSize": 13,
+                      "position": "center"
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.discord.mute",
+                        "params": {
+                          "mode": "toggle"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "deafen",
+            "label": {
+              "en": "Deafen",
+              "ru": "Оглушить"
+            },
+            "button": {
+              "stateFrom": "discord.deafened",
+              "states": [
+                {
+                  "id": "hearing",
+                  "when": false,
+                  "visual": {
+                    "background": "#22303c",
+                    "label": {
+                      "text": "Звук",
+                      "fontSize": 13,
+                      "position": "center"
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.discord.deafen",
+                        "params": {
+                          "mode": "toggle"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "deafened",
+                  "when": true,
+                  "visual": {
+                    "background": "#6f3535",
+                    "label": {
+                      "text": "Оглушён",
+                      "fontSize": 13,
+                      "position": "center"
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.discord.deafen",
+                        "params": {
+                          "mode": "toggle"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "channel",
+            "label": {
+              "en": "Channel and who is in it",
+              "ru": "Канал и кто в нём"
+            },
+            "description": {
+              "en": "The channel you are in and how many people are there",
+              "ru": "Канал, в котором вы сидите, и сколько в нём человек"
+            },
+            "button": {
+              "states": [
+                {
+                  "id": "default",
+                  "visual": {
+                    "background": "#1a1c22",
+                    "label": {
+                      "text": "{{discord.channel}}\n{{discord.members}}",
+                      "fontSize": 12,
+                      "position": "center"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "talking",
+            "label": {
+              "en": "Who is talking",
+              "ru": "Кто говорит"
+            },
+            "button": {
+              "states": [
+                {
+                  "id": "default",
+                  "visual": {
+                    "background": "#1a1c22",
+                    "label": {
+                      "text": "{{discord.speaking}}",
+                      "fontSize": 11,
+                      "position": "center"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
       }
     },
     {
@@ -38,7 +650,1119 @@
         "en": "Scenes, streaming, recording and audio in OBS Studio",
         "ru": "Сцены, стрим, запись и звук в OBS Studio"
       },
-      "cover": "plugin:ed.obs/assets/logo.webp"
+      "cover": "plugin:ed.obs/assets/logo.webp",
+      "manifest": {
+        "name": {
+          "en": "OBS",
+          "ru": "OBS"
+        },
+        "cover": "plugin:ed.obs/assets/logo.webp",
+        "description": {
+          "en": "Scenes, streaming, recording and audio in OBS Studio",
+          "ru": "Сцены, стрим, запись и звук в OBS Studio"
+        },
+        "version": "1.0.0",
+        "apiVersion": 1,
+        "surfaces": [
+          {
+            "type": "ed.obs.thumbnail",
+            "label": {
+              "en": "Scene thumbnail",
+              "ru": "Миниатюра сцены"
+            },
+            "description": {
+              "en": "What a scene or a source looks like right now, on the key that switches to it",
+              "ru": "Как сейчас выглядит сцена или источник — на клавише, которая её включает"
+            },
+            "icon": "page",
+            "params": [
+              {
+                "name": "source",
+                "type": "select",
+                "optionsFrom": "shootable",
+                "label": {
+                  "en": "What to show",
+                  "ru": "Что показывать"
+                },
+                "default": "@program",
+                "emptyNote": {
+                  "en": "OBS is not running, so it cannot say what it has",
+                  "ru": "OBS не запущен, поэтому список сцен взять неоткуда"
+                }
+              },
+              {
+                "name": "every",
+                "type": "select",
+                "label": {
+                  "en": "Refresh",
+                  "ru": "Обновлять"
+                },
+                "default": "5",
+                "options": [
+                  {
+                    "value": "1",
+                    "label": {
+                      "en": "Every second",
+                      "ru": "Раз в секунду"
+                    }
+                  },
+                  {
+                    "value": "5",
+                    "label": {
+                      "en": "Every 5 seconds",
+                      "ru": "Раз в 5 секунд"
+                    }
+                  },
+                  {
+                    "value": "10",
+                    "label": {
+                      "en": "Every 10 seconds",
+                      "ru": "Раз в 10 секунд"
+                    }
+                  },
+                  {
+                    "value": "30",
+                    "label": {
+                      "en": "Every 30 seconds",
+                      "ru": "Раз в 30 секунд"
+                    }
+                  },
+                  {
+                    "value": "60",
+                    "label": {
+                      "en": "Every minute",
+                      "ru": "Раз в минуту"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "ed.obs.meter",
+            "label": {
+              "en": "Level meter",
+              "ru": "Индикатор уровня"
+            },
+            "description": {
+              "en": "How loud an input actually is, as a strip along the key",
+              "ru": "Насколько громок вход на самом деле — полоской по краю клавиши"
+            },
+            "icon": "mute",
+            "params": [
+              {
+                "name": "inputs",
+                "type": "list",
+                "optionsFrom": "audio-inputs",
+                "label": {
+                  "en": "Sources",
+                  "ru": "Источники"
+                },
+                "description": {
+                  "en": "Drawn in the order listed, sharing one scale so they can be compared",
+                  "ru": "Рисуются в порядке списка, по общей шкале — чтобы их можно было сравнивать"
+                },
+                "emptyNote": {
+                  "en": "OBS is not running, so it cannot say what it has",
+                  "ru": "OBS не запущен, поэтому список источников взять неоткуда"
+                }
+              },
+              {
+                "name": "direction",
+                "type": "select",
+                "label": {
+                  "en": "Bars",
+                  "ru": "Полоски"
+                },
+                "default": "bottom",
+                "options": [
+                  {
+                    "value": "bottom",
+                    "label": {
+                      "en": "Lying, stacked upward",
+                      "ru": "Лежат, стопкой снизу вверх"
+                    }
+                  },
+                  {
+                    "value": "side",
+                    "label": {
+                      "en": "Standing, side by side",
+                      "ru": "Стоят рядом, слева направо"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "thickness",
+                "type": "number",
+                "label": {
+                  "en": "How much of the key, %",
+                  "ru": "Сколько от клавиши, %"
+                },
+                "default": 100,
+                "min": 2,
+                "max": 100,
+                "description": {
+                  "en": "Less than all of it leaves room for a label saying which inputs these are",
+                  "ru": "Меньше ста оставляет место для подписи, какие это входы"
+                }
+              },
+              {
+                "name": "calm",
+                "type": "color",
+                "label": {
+                  "en": "Quiet",
+                  "ru": "Тихо"
+                },
+                "default": "#3fb950"
+              },
+              {
+                "name": "loud",
+                "type": "color",
+                "label": {
+                  "en": "Loud",
+                  "ru": "Громко"
+                },
+                "default": "#d29922"
+              },
+              {
+                "name": "hot",
+                "type": "color",
+                "label": {
+                  "en": "Too loud",
+                  "ru": "Перегруз"
+                },
+                "default": "#f85149"
+              },
+              {
+                "name": "track",
+                "type": "color",
+                "label": {
+                  "en": "The trough behind a bar",
+                  "ru": "Подложка под полоской"
+                },
+                "default": "#ffffff20",
+                "required": false,
+                "description": {
+                  "en": "Without it a silent input draws nothing, and you cannot tell which bar is which",
+                  "ru": "Без неё молчащий вход не рисует ничего, и не понять, где какая полоска"
+                }
+              },
+              {
+                "name": "background",
+                "type": "color",
+                "label": {
+                  "en": "Behind the meter",
+                  "ru": "Фон индикатора"
+                },
+                "required": false,
+                "description": {
+                  "en": "Empty lets the key's own background show through",
+                  "ru": "Пусто — виден собственный фон клавиши"
+                }
+              }
+            ]
+          }
+        ],
+        "settings": [
+          {
+            "name": "enabled",
+            "type": "boolean",
+            "label": {
+              "en": "Connect to OBS",
+              "ru": "Подключаться к OBS"
+            },
+            "default": false,
+            "required": false
+          },
+          {
+            "name": "host",
+            "type": "string",
+            "label": {
+              "en": "Address",
+              "ru": "Адрес"
+            },
+            "default": "127.0.0.1",
+            "description": {
+              "en": "Leave as it is unless OBS runs on another machine",
+              "ru": "Оставьте как есть, если OBS не на другом компьютере"
+            }
+          },
+          {
+            "name": "port",
+            "type": "number",
+            "label": {
+              "en": "Port",
+              "ru": "Порт"
+            },
+            "default": 4455,
+            "min": 1,
+            "max": 65535
+          },
+          {
+            "name": "password",
+            "type": "string",
+            "secret": true,
+            "required": false,
+            "label": {
+              "en": "Password",
+              "ru": "Пароль"
+            },
+            "description": {
+              "en": "From Tools → WebSocket Server Settings in OBS",
+              "ru": "Из «Инструменты → Настройки сервера WebSocket» в OBS"
+            }
+          }
+        ],
+        "commands": [
+          {
+            "name": "reconnect",
+            "label": {
+              "en": "Reconnect",
+              "ru": "Переподключиться"
+            },
+            "icon": "link"
+          }
+        ],
+        "variables": [
+          {
+            "name": "ed.obs.connected",
+            "type": "boolean",
+            "label": {
+              "en": "OBS connected",
+              "ru": "OBS подключён"
+            },
+            "initial": false
+          },
+          {
+            "name": "ed.obs.scene",
+            "type": "string",
+            "label": {
+              "en": "Current scene",
+              "ru": "Текущая сцена"
+            }
+          },
+          {
+            "name": "ed.obs.streaming",
+            "type": "boolean",
+            "label": {
+              "en": "Streaming",
+              "ru": "Идёт трансляция"
+            },
+            "initial": false
+          },
+          {
+            "name": "ed.obs.recording",
+            "type": "boolean",
+            "label": {
+              "en": "Recording",
+              "ru": "Идёт запись"
+            },
+            "initial": false
+          },
+          {
+            "name": "ed.obs.recording-paused",
+            "type": "boolean",
+            "label": {
+              "en": "Recording paused",
+              "ru": "Запись на паузе"
+            },
+            "initial": false
+          },
+          {
+            "name": "ed.obs.replay-buffer",
+            "type": "boolean",
+            "label": {
+              "en": "Replay buffer on",
+              "ru": "Буфер повтора включён"
+            },
+            "initial": false
+          },
+          {
+            "name": "ed.obs.virtual-cam",
+            "type": "boolean",
+            "label": {
+              "en": "Virtual camera on",
+              "ru": "Виртуальная камера включена"
+            },
+            "initial": false
+          },
+          {
+            "name": "ed.obs.transitioning",
+            "type": "boolean",
+            "label": {
+              "en": "Transition running",
+              "ru": "Идёт переход"
+            },
+            "initial": false
+          },
+          {
+            "name": "ed.obs.transition-name",
+            "type": "string",
+            "label": {
+              "en": "Current transition",
+              "ru": "Текущий переход"
+            }
+          },
+          {
+            "name": "ed.obs.transition-duration",
+            "type": "number",
+            "label": {
+              "en": "Transition, ms",
+              "ru": "Длительность перехода, мс"
+            },
+            "initial": 0
+          },
+          {
+            "name": "ed.obs.mute",
+            "type": "boolean",
+            "label": {
+              "en": "Muted",
+              "ru": "Звук выключен"
+            },
+            "argument": {
+              "label": {
+                "en": "Source",
+                "ru": "Источник"
+              },
+              "optionsFrom": "audio-inputs"
+            }
+          },
+          {
+            "name": "ed.obs.volume",
+            "type": "number",
+            "label": {
+              "en": "Volume, dB",
+              "ru": "Громкость, дБ"
+            },
+            "argument": {
+              "label": {
+                "en": "Source",
+                "ru": "Источник"
+              },
+              "optionsFrom": "audio-inputs"
+            }
+          },
+          {
+            "name": "ed.obs.monitor",
+            "type": "enum",
+            "label": {
+              "en": "Monitoring",
+              "ru": "Прослушивание"
+            },
+            "options": [
+              {
+                "value": "off",
+                "label": {
+                  "en": "Off",
+                  "ru": "Выключено"
+                }
+              },
+              {
+                "value": "monitor",
+                "label": {
+                  "en": "Monitor only",
+                  "ru": "Только слушать"
+                }
+              },
+              {
+                "value": "both",
+                "label": {
+                  "en": "Monitor and output",
+                  "ru": "Слушать и выводить"
+                }
+              }
+            ],
+            "argument": {
+              "label": {
+                "en": "Source",
+                "ru": "Источник"
+              },
+              "optionsFrom": "audio-inputs"
+            }
+          },
+          {
+            "name": "ed.obs.filter",
+            "type": "boolean",
+            "label": {
+              "en": "Filter on",
+              "ru": "Фильтр включён"
+            },
+            "argument": {
+              "label": {
+                "en": "Source",
+                "ru": "Источник"
+              },
+              "optionsFrom": "sources",
+              "then": {
+                "label": {
+                  "en": "Filter",
+                  "ru": "Фильтр"
+                },
+                "optionsFrom": "filters"
+              }
+            }
+          },
+          {
+            "name": "ed.obs.visible",
+            "type": "boolean",
+            "label": {
+              "en": "Source shown",
+              "ru": "Источник показан"
+            },
+            "argument": {
+              "label": {
+                "en": "Scene",
+                "ru": "Сцена"
+              },
+              "optionsFrom": "scenes",
+              "then": {
+                "label": {
+                  "en": "Source",
+                  "ru": "Источник"
+                },
+                "optionsFrom": "scene-sources"
+              }
+            }
+          }
+        ],
+        "actions": [
+          {
+            "type": "ed.obs.set-scene",
+            "icon": "page",
+            "label": {
+              "en": "Switch scene",
+              "ru": "Переключить сцену"
+            },
+            "params": [
+              {
+                "name": "scene",
+                "type": "select",
+                "optionsFrom": "scenes",
+                "label": {
+                  "en": "Scene",
+                  "ru": "Сцена"
+                },
+                "placeholder": {
+                  "en": "Name of the scene",
+                  "ru": "Название сцены"
+                }
+              }
+            ],
+            "group": {
+              "en": "Scenes",
+              "ru": "Сцены"
+            }
+          },
+          {
+            "type": "ed.obs.preview-scene",
+            "icon": "page",
+            "label": {
+              "en": "Set preview scene",
+              "ru": "Сцена в предпросмотр"
+            },
+            "description": {
+              "en": "Studio mode only: puts a scene in the preview without going live",
+              "ru": "Только в студийном режиме: ставит сцену в предпросмотр, не выпуская в эфир"
+            },
+            "params": [
+              {
+                "name": "scene",
+                "type": "select",
+                "optionsFrom": "scenes",
+                "label": {
+                  "en": "Scene",
+                  "ru": "Сцена"
+                }
+              }
+            ],
+            "group": {
+              "en": "Scenes",
+              "ru": "Сцены"
+            }
+          },
+          {
+            "type": "ed.obs.transition",
+            "icon": "back",
+            "label": {
+              "en": "Transition",
+              "ru": "Переход"
+            },
+            "description": {
+              "en": "Studio mode only: sends the preview to the stream",
+              "ru": "Только в студийном режиме: отправляет предпросмотр в эфир"
+            },
+            "params": [],
+            "group": {
+              "en": "Scenes",
+              "ru": "Сцены"
+            }
+          },
+          {
+            "type": "ed.obs.toggle-stream",
+            "presetOnly": true,
+            "icon": "globe",
+            "label": {
+              "en": "Start / stop stream",
+              "ru": "Начать / завершить трансляцию"
+            },
+            "params": [],
+            "group": {
+              "en": "Broadcast",
+              "ru": "Эфир"
+            }
+          },
+          {
+            "type": "ed.obs.toggle-record",
+            "presetOnly": true,
+            "icon": "stop",
+            "label": {
+              "en": "Start / stop recording",
+              "ru": "Начать / остановить запись"
+            },
+            "params": [],
+            "group": {
+              "en": "Broadcast",
+              "ru": "Эфир"
+            }
+          },
+          {
+            "type": "ed.obs.toggle-record-pause",
+            "icon": "play-pause",
+            "label": {
+              "en": "Pause / resume recording",
+              "ru": "Пауза / продолжить запись"
+            },
+            "params": [],
+            "group": {
+              "en": "Broadcast",
+              "ru": "Эфир"
+            }
+          },
+          {
+            "type": "ed.obs.toggle-replay-buffer",
+            "presetOnly": true,
+            "icon": "previous",
+            "label": {
+              "en": "Replay buffer on / off",
+              "ru": "Буфер повтора вкл / выкл"
+            },
+            "params": [],
+            "group": {
+              "en": "Broadcast",
+              "ru": "Эфир"
+            }
+          },
+          {
+            "type": "ed.obs.save-replay",
+            "icon": "next",
+            "label": {
+              "en": "Save replay",
+              "ru": "Сохранить повтор"
+            },
+            "params": [],
+            "group": {
+              "en": "Broadcast",
+              "ru": "Эфир"
+            }
+          },
+          {
+            "type": "ed.obs.toggle-virtual-cam",
+            "presetOnly": true,
+            "icon": "app",
+            "label": {
+              "en": "Virtual camera on / off",
+              "ru": "Виртуальная камера вкл / выкл"
+            },
+            "params": [],
+            "group": {
+              "en": "Broadcast",
+              "ru": "Эфир"
+            }
+          },
+          {
+            "type": "ed.obs.toggle-mute",
+            "icon": "mute",
+            "label": {
+              "en": "Mute / unmute",
+              "ru": "Выключить / включить звук"
+            },
+            "params": [
+              {
+                "name": "input",
+                "type": "select",
+                "optionsFrom": "audio-inputs",
+                "label": {
+                  "en": "Source",
+                  "ru": "Источник"
+                },
+                "placeholder": {
+                  "en": "Name of the audio source",
+                  "ru": "Название источника звука"
+                }
+              }
+            ],
+            "group": {
+              "en": "Audio",
+              "ru": "Звук"
+            }
+          },
+          {
+            "type": "ed.obs.set-volume",
+            "icon": "volume-up",
+            "label": {
+              "en": "Set volume",
+              "ru": "Задать громкость"
+            },
+            "description": {
+              "en": "In decibels, as OBS shows them: 0 is unchanged, −60 is silence",
+              "ru": "В децибелах, как показывает OBS: 0 — без изменения, −60 — тишина"
+            },
+            "params": [
+              {
+                "name": "input",
+                "type": "select",
+                "optionsFrom": "audio-inputs",
+                "label": {
+                  "en": "Source",
+                  "ru": "Источник"
+                }
+              },
+              {
+                "name": "db",
+                "type": "number",
+                "label": {
+                  "en": "Volume, dB",
+                  "ru": "Громкость, дБ"
+                },
+                "default": 0,
+                "min": -100,
+                "max": 26
+              }
+            ],
+            "group": {
+              "en": "Audio",
+              "ru": "Звук"
+            }
+          },
+          {
+            "type": "ed.obs.adjust-volume",
+            "icon": "volume-down",
+            "label": {
+              "en": "Change volume",
+              "ru": "Изменить громкость"
+            },
+            "description": {
+              "en": "Adds to the current volume; a negative number turns it down",
+              "ru": "Прибавляет к текущей громкости; отрицательное число убавляет"
+            },
+            "params": [
+              {
+                "name": "input",
+                "type": "select",
+                "optionsFrom": "audio-inputs",
+                "label": {
+                  "en": "Source",
+                  "ru": "Источник"
+                }
+              },
+              {
+                "name": "db",
+                "type": "number",
+                "label": {
+                  "en": "Change, dB",
+                  "ru": "Изменение, дБ"
+                },
+                "default": -3,
+                "min": -50,
+                "max": 50
+              }
+            ],
+            "group": {
+              "en": "Audio",
+              "ru": "Звук"
+            }
+          },
+          {
+            "type": "ed.obs.set-monitor",
+            "icon": "keyboard",
+            "label": {
+              "en": "Set monitoring",
+              "ru": "Прослушивание источника"
+            },
+            "description": {
+              "en": "Whether you hear the source yourself, and whether the stream does",
+              "ru": "Слышите ли источник вы сами и попадает ли он в трансляцию"
+            },
+            "params": [
+              {
+                "name": "input",
+                "type": "select",
+                "optionsFrom": "audio-inputs",
+                "label": {
+                  "en": "Source",
+                  "ru": "Источник"
+                }
+              },
+              {
+                "name": "monitor",
+                "type": "select",
+                "label": {
+                  "en": "Monitoring",
+                  "ru": "Прослушивание"
+                },
+                "options": [
+                  {
+                    "value": "off",
+                    "label": {
+                      "en": "Off",
+                      "ru": "Выключено"
+                    }
+                  },
+                  {
+                    "value": "monitor",
+                    "label": {
+                      "en": "Monitor only",
+                      "ru": "Только слушать"
+                    }
+                  },
+                  {
+                    "value": "both",
+                    "label": {
+                      "en": "Monitor and output",
+                      "ru": "Слушать и выводить"
+                    }
+                  }
+                ],
+                "default": "monitor"
+              }
+            ],
+            "group": {
+              "en": "Audio",
+              "ru": "Звук"
+            }
+          },
+          {
+            "type": "ed.obs.toggle-filter",
+            "icon": "toggle",
+            "label": {
+              "en": "Filter on / off",
+              "ru": "Фильтр вкл / выкл"
+            },
+            "description": {
+              "en": "Any filter OBS lists on the source, audio or visual alike",
+              "ru": "Любой фильтр источника — что звуковой, что визуальный"
+            },
+            "params": [
+              {
+                "name": "source",
+                "type": "select",
+                "optionsFrom": "sources",
+                "label": {
+                  "en": "Source",
+                  "ru": "Источник"
+                }
+              },
+              {
+                "name": "filter",
+                "type": "select",
+                "optionsFrom": "filters",
+                "dependsOn": [
+                  "source"
+                ],
+                "emptyNote": {
+                  "en": "OBS lists no filters on that source",
+                  "ru": "OBS не показывает фильтров у этого источника"
+                },
+                "label": {
+                  "en": "Filter",
+                  "ru": "Фильтр"
+                }
+              }
+            ],
+            "group": {
+              "en": "Filters",
+              "ru": "Фильтры"
+            }
+          },
+          {
+            "type": "ed.obs.toggle-source",
+            "icon": "folder",
+            "label": {
+              "en": "Show / hide source",
+              "ru": "Показать / скрыть источник"
+            },
+            "params": [
+              {
+                "name": "scene",
+                "type": "select",
+                "optionsFrom": "scenes",
+                "label": {
+                  "en": "Scene",
+                  "ru": "Сцена"
+                }
+              },
+              {
+                "name": "source",
+                "type": "select",
+                "optionsFrom": "sources",
+                "dependsOn": [
+                  "scene"
+                ],
+                "emptyNote": {
+                  "en": "That scene has nothing in it",
+                  "ru": "В этой сцене ничего нет"
+                },
+                "label": {
+                  "en": "Source",
+                  "ru": "Источник"
+                }
+              }
+            ],
+            "group": {
+              "en": "Audio",
+              "ru": "Звук"
+            }
+          }
+        ],
+        "presets": [
+          {
+            "name": "stream",
+            "label": {
+              "en": "Stream",
+              "ru": "Трансляция"
+            },
+            "description": {
+              "en": "Starts and stops the stream, and shows whether it is live",
+              "ru": "Запускает и останавливает трансляцию и показывает, идёт ли она"
+            },
+            "button": {
+              "stateFrom": "ed.obs.streaming",
+              "states": [
+                {
+                  "id": "off",
+                  "when": false,
+                  "visual": {
+                    "background": "#22303c",
+                    "label": {
+                      "text": "Stream",
+                      "fontSize": 13
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.obs.toggle-stream"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "on",
+                  "when": true,
+                  "visual": {
+                    "background": "#7a2c2c",
+                    "label": {
+                      "text": "LIVE",
+                      "fontSize": 13
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.obs.toggle-stream"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "record",
+            "label": {
+              "en": "Recording",
+              "ru": "Запись"
+            },
+            "description": {
+              "en": "Starts and stops recording, and shows whether it is running",
+              "ru": "Запускает и останавливает запись и показывает, идёт ли она"
+            },
+            "button": {
+              "stateFrom": "ed.obs.recording",
+              "states": [
+                {
+                  "id": "off",
+                  "when": false,
+                  "visual": {
+                    "background": "#22303c",
+                    "label": {
+                      "text": "Record",
+                      "fontSize": 13
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.obs.toggle-record"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "on",
+                  "when": true,
+                  "visual": {
+                    "background": "#7a2c2c",
+                    "label": {
+                      "text": "● REC",
+                      "fontSize": 13
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.obs.toggle-record"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "replay",
+            "label": {
+              "en": "Replay buffer",
+              "ru": "Буфер повтора"
+            },
+            "description": {
+              "en": "Turns the replay buffer on and off",
+              "ru": "Включает и выключает буфер повтора"
+            },
+            "button": {
+              "stateFrom": "ed.obs.replay-buffer",
+              "states": [
+                {
+                  "id": "off",
+                  "when": false,
+                  "visual": {
+                    "background": "#22303c",
+                    "label": {
+                      "text": "Replay",
+                      "fontSize": 13
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.obs.toggle-replay-buffer"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "on",
+                  "when": true,
+                  "visual": {
+                    "background": "#2f5d3a",
+                    "label": {
+                      "text": "Replay on",
+                      "fontSize": 13
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.obs.toggle-replay-buffer"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "virtual-cam",
+            "label": {
+              "en": "Virtual camera",
+              "ru": "Виртуальная камера"
+            },
+            "description": {
+              "en": "Turns the virtual camera on and off",
+              "ru": "Включает и выключает виртуальную камеру"
+            },
+            "button": {
+              "stateFrom": "ed.obs.virtual-cam",
+              "states": [
+                {
+                  "id": "off",
+                  "when": false,
+                  "visual": {
+                    "background": "#22303c",
+                    "label": {
+                      "text": "Cam",
+                      "fontSize": 13
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.obs.toggle-virtual-cam"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "on",
+                  "when": true,
+                  "visual": {
+                    "background": "#2f5d3a",
+                    "label": {
+                      "text": "Cam on",
+                      "fontSize": 13
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.obs.toggle-virtual-cam"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "current-scene",
+            "label": {
+              "en": "Current scene",
+              "ru": "Текущая сцена"
+            },
+            "description": {
+              "en": "Shows which scene is live, and does nothing when pressed",
+              "ru": "Показывает, какая сцена в эфире; на нажатие не реагирует"
+            },
+            "button": {
+              "states": [
+                {
+                  "id": "default",
+                  "visual": {
+                    "background": "#22303c",
+                    "label": {
+                      "text": "{{obs.scene}}",
+                      "fontSize": 12
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "coverPath": "assets/logo.webp",
+      "coverFile": "D:\\dev\\easydeck-plugins\\build\\ed.obs\\assets\\logo.webp"
     },
     {
       "id": "ed.soundpad",
@@ -56,7 +1780,575 @@
         "en": "Plays the sounds from your Soundpad list, and its volume",
         "ru": "Проигрывает звуки из списка Soundpad и управляет его громкостью"
       },
-      "cover": "plugin:ed.soundpad/assets/logo.webp"
+      "cover": "plugin:ed.soundpad/assets/logo.webp",
+      "manifest": {
+        "name": {
+          "en": "Soundpad",
+          "ru": "Soundpad"
+        },
+        "cover": "plugin:ed.soundpad/assets/logo.webp",
+        "description": {
+          "en": "Plays the sounds from your Soundpad list, and its volume",
+          "ru": "Проигрывает звуки из списка Soundpad и управляет его громкостью"
+        },
+        "version": "1.0.0",
+        "apiVersion": 1,
+        "settings": [
+          {
+            "name": "enabled",
+            "type": "boolean",
+            "label": {
+              "en": "Connect to Soundpad",
+              "ru": "Подключаться к Soundpad"
+            },
+            "default": false,
+            "required": false,
+            "description": {
+              "en": "Soundpad needs no setting up: it always listens, and there is nothing to configure",
+              "ru": "Soundpad настраивать не нужно: он всегда слушает, настраивать нечего"
+            }
+          }
+        ],
+        "commands": [
+          {
+            "name": "reconnect",
+            "label": {
+              "en": "Reconnect",
+              "ru": "Переподключиться"
+            },
+            "icon": "link"
+          }
+        ],
+        "variables": [
+          {
+            "name": "ed.soundpad.connected",
+            "type": "boolean",
+            "label": {
+              "en": "Soundpad connected",
+              "ru": "Soundpad подключён"
+            },
+            "initial": false
+          },
+          {
+            "name": "ed.soundpad.status",
+            "type": "string",
+            "label": {
+              "en": "What playback is doing",
+              "ru": "Что с воспроизведением"
+            },
+            "description": {
+              "en": "stopped, playing, paused or seeking — compare against it to know which",
+              "ru": "«stopped», «playing», «paused» или «seeking» — сравнивайте, чтобы узнать"
+            }
+          },
+          {
+            "name": "ed.soundpad.playing",
+            "type": "boolean",
+            "label": {
+              "en": "A sound is playing",
+              "ru": "Звук играет"
+            },
+            "initial": false
+          },
+          {
+            "name": "ed.soundpad.volume",
+            "type": "number",
+            "label": {
+              "en": "Volume, %",
+              "ru": "Громкость, %"
+            },
+            "initial": 0
+          },
+          {
+            "name": "ed.soundpad.muted",
+            "type": "boolean",
+            "label": {
+              "en": "Muted",
+              "ru": "Звук выключен"
+            },
+            "initial": false
+          },
+          {
+            "name": "ed.soundpad.sound-count",
+            "type": "number",
+            "label": {
+              "en": "Sounds in the list",
+              "ru": "Звуков в списке"
+            },
+            "initial": 0
+          },
+          {
+            "name": "ed.soundpad.position",
+            "type": "string",
+            "label": {
+              "en": "Position",
+              "ru": "Позиция"
+            },
+            "initial": "0:00"
+          },
+          {
+            "name": "ed.soundpad.position-ms",
+            "type": "number",
+            "label": {
+              "en": "Position, ms",
+              "ru": "Позиция, мс"
+            },
+            "description": {
+              "en": "The number behind the position, for a handler to compare against",
+              "ru": "Число за позицией — чтобы обработчик мог его сравнить"
+            },
+            "initial": 0
+          },
+          {
+            "name": "ed.soundpad.duration",
+            "type": "string",
+            "label": {
+              "en": "Length",
+              "ru": "Длительность"
+            },
+            "initial": "0:00"
+          },
+          {
+            "name": "ed.soundpad.duration-ms",
+            "type": "number",
+            "label": {
+              "en": "Length, ms",
+              "ru": "Длительность, мс"
+            },
+            "initial": 0
+          }
+        ],
+        "actions": [
+          {
+            "type": "ed.soundpad.play",
+            "icon": "play-pause",
+            "label": {
+              "en": "Play a sound",
+              "ru": "Проиграть звук"
+            },
+            "description": {
+              "en": "Held by name, so rearranging your Soundpad list does not change what a key plays",
+              "ru": "Хранится по названию — поэтому перетаскивание списка в Soundpad не меняет, что играет клавиша"
+            },
+            "params": [
+              {
+                "name": "sound",
+                "type": "select",
+                "optionsFrom": "sounds",
+                "label": {
+                  "en": "Sound",
+                  "ru": "Звук"
+                },
+                "placeholder": {
+                  "en": "Name, tag or file name",
+                  "ru": "Название, тег или имя файла"
+                }
+              },
+              {
+                "name": "lines",
+                "type": "select",
+                "label": {
+                  "en": "Where to play it",
+                  "ru": "Куда проигрывать"
+                },
+                "default": "",
+                "required": false,
+                "options": [
+                  {
+                    "value": "",
+                    "label": {
+                      "en": "As Soundpad is set up",
+                      "ru": "Как настроено в Soundpad"
+                    }
+                  },
+                  {
+                    "value": "both",
+                    "label": {
+                      "en": "Speakers and microphone",
+                      "ru": "В колонки и в микрофон"
+                    }
+                  },
+                  {
+                    "value": "speakers",
+                    "label": {
+                      "en": "Speakers only",
+                      "ru": "Только в колонки"
+                    }
+                  },
+                  {
+                    "value": "microphone",
+                    "label": {
+                      "en": "Microphone only",
+                      "ru": "Только в микрофон"
+                    }
+                  }
+                ]
+              }
+            ],
+            "group": {
+              "en": "Sounds",
+              "ru": "Звуки"
+            }
+          },
+          {
+            "type": "ed.soundpad.play-random",
+            "icon": "cycle",
+            "label": {
+              "en": "Play a random sound",
+              "ru": "Проиграть случайный звук"
+            },
+            "params": [],
+            "group": {
+              "en": "Sounds",
+              "ru": "Звуки"
+            }
+          },
+          {
+            "type": "ed.soundpad.play-previous",
+            "icon": "previous",
+            "label": {
+              "en": "Play the previous sound",
+              "ru": "Проиграть предыдущий звук"
+            },
+            "params": [],
+            "group": {
+              "en": "Sounds",
+              "ru": "Звуки"
+            }
+          },
+          {
+            "type": "ed.soundpad.play-next",
+            "icon": "next",
+            "label": {
+              "en": "Play the next sound",
+              "ru": "Проиграть следующий звук"
+            },
+            "params": [],
+            "group": {
+              "en": "Sounds",
+              "ru": "Звуки"
+            }
+          },
+          {
+            "type": "ed.soundpad.stop",
+            "icon": "stop",
+            "label": {
+              "en": "Stop",
+              "ru": "Остановить"
+            },
+            "params": [],
+            "group": {
+              "en": "Sounds",
+              "ru": "Звуки"
+            }
+          },
+          {
+            "type": "ed.soundpad.toggle-pause",
+            "icon": "play-pause",
+            "label": {
+              "en": "Pause / resume",
+              "ru": "Пауза / продолжить"
+            },
+            "params": [],
+            "group": {
+              "en": "Sounds",
+              "ru": "Звуки"
+            }
+          },
+          {
+            "type": "ed.soundpad.seek",
+            "icon": "next",
+            "label": {
+              "en": "Seek",
+              "ru": "Перемотать"
+            },
+            "description": {
+              "en": "To a position in the sound, or by so much from where it is",
+              "ru": "На позицию в звуке или на столько-то от текущей"
+            },
+            "params": [
+              {
+                "name": "how",
+                "type": "select",
+                "label": {
+                  "en": "How",
+                  "ru": "Как"
+                },
+                "default": "by",
+                "options": [
+                  {
+                    "value": "by",
+                    "label": {
+                      "en": "By this much",
+                      "ru": "На столько-то"
+                    }
+                  },
+                  {
+                    "value": "to",
+                    "label": {
+                      "en": "To this position",
+                      "ru": "На эту позицию"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "seconds",
+                "type": "number",
+                "label": {
+                  "en": "Seconds",
+                  "ru": "Секунд"
+                },
+                "default": 5,
+                "min": -600,
+                "max": 600,
+                "description": {
+                  "en": "A negative number goes backwards, where that means anything",
+                  "ru": "Отрицательное число — назад, там где это имеет смысл"
+                }
+              }
+            ],
+            "group": {
+              "en": "Sounds",
+              "ru": "Звуки"
+            }
+          },
+          {
+            "type": "ed.soundpad.set-volume",
+            "icon": "volume-up",
+            "label": {
+              "en": "Set volume",
+              "ru": "Задать громкость"
+            },
+            "params": [
+              {
+                "name": "percent",
+                "type": "number",
+                "label": {
+                  "en": "Volume, %",
+                  "ru": "Громкость, %"
+                },
+                "default": 100,
+                "min": 0,
+                "max": 100
+              }
+            ],
+            "group": {
+              "en": "Volume",
+              "ru": "Громкость"
+            }
+          },
+          {
+            "type": "ed.soundpad.adjust-volume",
+            "icon": "volume-down",
+            "label": {
+              "en": "Change volume",
+              "ru": "Изменить громкость"
+            },
+            "description": {
+              "en": "Adds to the current volume; a negative number turns it down",
+              "ru": "Прибавляет к текущей громкости; отрицательное число убавляет"
+            },
+            "params": [
+              {
+                "name": "by",
+                "type": "number",
+                "label": {
+                  "en": "Change, %",
+                  "ru": "Изменение, %"
+                },
+                "default": -10,
+                "min": -100,
+                "max": 100
+              }
+            ],
+            "group": {
+              "en": "Volume",
+              "ru": "Громкость"
+            }
+          },
+          {
+            "type": "ed.soundpad.toggle-mute",
+            "icon": "mute",
+            "label": {
+              "en": "Mute / unmute",
+              "ru": "Выключить / включить звук"
+            },
+            "params": [],
+            "group": {
+              "en": "Volume",
+              "ru": "Громкость"
+            }
+          },
+          {
+            "type": "ed.soundpad.record",
+            "icon": "record",
+            "label": {
+              "en": "Recording",
+              "ru": "Запись"
+            },
+            "description": {
+              "en": "Soundpad cannot be asked whether it is recording, so this says which, not \"toggle\"",
+              "ru": "Soundpad нельзя спросить, идёт ли запись, поэтому здесь не «переключить», а что именно"
+            },
+            "params": [
+              {
+                "name": "do",
+                "type": "select",
+                "label": {
+                  "en": "What to do",
+                  "ru": "Что сделать"
+                },
+                "default": "start",
+                "options": [
+                  {
+                    "value": "start",
+                    "label": {
+                      "en": "Start recording",
+                      "ru": "Начать запись"
+                    }
+                  },
+                  {
+                    "value": "stop",
+                    "label": {
+                      "en": "Stop recording",
+                      "ru": "Остановить запись"
+                    }
+                  }
+                ]
+              }
+            ],
+            "group": {
+              "en": "Recording",
+              "ru": "Запись"
+            }
+          }
+        ],
+        "presets": [
+          {
+            "name": "stop",
+            "label": {
+              "en": "Stop",
+              "ru": "Остановить"
+            },
+            "description": {
+              "en": "Stops whatever is playing",
+              "ru": "Останавливает то, что играет"
+            },
+            "button": {
+              "states": [
+                {
+                  "id": "default",
+                  "visual": {
+                    "background": "#3a1f1f",
+                    "label": {
+                      "text": "Стоп",
+                      "color": "#ffffff",
+                      "position": "bottom",
+                      "fontSize": 14
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.soundpad.stop",
+                        "params": {}
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "random",
+            "label": {
+              "en": "Random sound",
+              "ru": "Случайный звук"
+            },
+            "description": {
+              "en": "Plays anything from the list, which is the best key on any soundboard",
+              "ru": "Играет что угодно из списка — лучшая клавиша любого саундборда"
+            },
+            "button": {
+              "states": [
+                {
+                  "id": "default",
+                  "visual": {
+                    "background": "#1f3a4d",
+                    "label": {
+                      "text": "🎲",
+                      "color": "#ffffff",
+                      "position": "center",
+                      "fontSize": 34
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.soundpad.play-random",
+                        "params": {}
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "mute",
+            "label": {
+              "en": "Mute",
+              "ru": "Заглушить"
+            },
+            "description": {
+              "en": "Goes dim while Soundpad is muted",
+              "ru": "Гаснет, пока звук Soundpad выключен"
+            },
+            "button": {
+              "stateFrom": "ed.soundpad.muted",
+              "states": [
+                {
+                  "id": "on",
+                  "when": false,
+                  "visual": {
+                    "background": "#1d2733",
+                    "label": {
+                      "text": "{{soundpad.volume}}%",
+                      "color": "#ffffff",
+                      "position": "bottom",
+                      "fontSize": 14
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.soundpad.toggle-mute",
+                        "params": {}
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "off",
+                  "when": true,
+                  "visual": {
+                    "background": "#2a2f36",
+                    "label": {
+                      "text": "—",
+                      "color": "#7d8590",
+                      "position": "center",
+                      "fontSize": 26
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "coverPath": "assets/logo.webp",
+      "coverFile": "D:\\dev\\easydeck-plugins\\build\\ed.soundpad\\assets\\logo.webp"
     },
     {
       "id": "ed.vts",
@@ -74,7 +2366,433 @@
         "en": "Hotkeys, expressions and models in VTube Studio",
         "ru": "Хоткеи, выражения и модели в VTube Studio"
       },
-      "cover": "plugin:ed.vts/assets/logo.png"
+      "cover": "plugin:ed.vts/assets/logo.png",
+      "manifest": {
+        "name": {
+          "en": "VTube Studio",
+          "ru": "VTube Studio"
+        },
+        "cover": "plugin:ed.vts/assets/logo.png",
+        "description": {
+          "en": "Hotkeys, expressions and models in VTube Studio",
+          "ru": "Хоткеи, выражения и модели в VTube Studio"
+        },
+        "version": "1.0.0",
+        "apiVersion": 1,
+        "settings": [
+          {
+            "name": "enabled",
+            "type": "boolean",
+            "label": {
+              "en": "Connect to VTube Studio",
+              "ru": "Подключаться к VTube Studio"
+            },
+            "default": false,
+            "required": false
+          },
+          {
+            "name": "host",
+            "type": "string",
+            "label": {
+              "en": "Address",
+              "ru": "Адрес"
+            },
+            "default": "127.0.0.1",
+            "description": {
+              "en": "Leave as it is unless VTube Studio runs on another machine",
+              "ru": "Оставьте как есть, если VTube Studio не на другом компьютере"
+            }
+          },
+          {
+            "name": "port",
+            "type": "number",
+            "label": {
+              "en": "Port",
+              "ru": "Порт"
+            },
+            "default": 8001,
+            "min": 1,
+            "max": 65535,
+            "description": {
+              "en": "From the API section of VTube Studio settings, where it must also be switched on",
+              "ru": "Из раздела API в настройках VTube Studio, там же его надо включить"
+            }
+          },
+          {
+            "name": "token",
+            "type": "string",
+            "secret": true,
+            "required": false,
+            "label": {
+              "en": "Access token",
+              "ru": "Токен доступа"
+            },
+            "description": {
+              "en": "Filled in by Authorise below; VTube Studio asks you to allow it once",
+              "ru": "Заполняется кнопкой «Авторизовать»; VTube Studio один раз спросит разрешение"
+            }
+          }
+        ],
+        "commands": [
+          {
+            "name": "authorise",
+            "label": {
+              "en": "Authorise",
+              "ru": "Авторизовать"
+            },
+            "icon": "link",
+            "description": {
+              "en": "VTube Studio will ask you to allow EasyDeck — switch to it and press Allow",
+              "ru": "VTube Studio попросит разрешить EasyDeck — переключитесь в него и нажмите «Разрешить»"
+            }
+          },
+          {
+            "name": "reconnect",
+            "label": {
+              "en": "Reconnect",
+              "ru": "Переподключиться"
+            },
+            "icon": "link"
+          }
+        ],
+        "variables": [
+          {
+            "name": "ed.vts.connected",
+            "type": "boolean",
+            "label": {
+              "en": "VTube Studio connected",
+              "ru": "VTube Studio подключён"
+            },
+            "initial": false
+          },
+          {
+            "name": "ed.vts.model",
+            "type": "string",
+            "label": {
+              "en": "Current model",
+              "ru": "Текущая модель"
+            }
+          },
+          {
+            "name": "ed.vts.tracking",
+            "type": "boolean",
+            "label": {
+              "en": "Face tracked",
+              "ru": "Лицо в кадре"
+            },
+            "initial": false,
+            "description": {
+              "en": "Whether VTube Studio can see a face right now",
+              "ru": "Видит ли VTube Studio лицо прямо сейчас"
+            }
+          },
+          {
+            "name": "ed.vts.expression",
+            "type": "boolean",
+            "label": {
+              "en": "Expression active",
+              "ru": "Выражение включено"
+            },
+            "argument": {
+              "label": {
+                "en": "Expression",
+                "ru": "Выражение"
+              },
+              "optionsFrom": "expressions"
+            }
+          },
+          {
+            "name": "ed.vts.animation",
+            "type": "string",
+            "label": {
+              "en": "Animation playing",
+              "ru": "Играет анимация"
+            },
+            "description": {
+              "en": "The name of the animation running now, idle animations aside",
+              "ru": "Название анимации, которая идёт сейчас; фоновая idle не в счёт"
+            }
+          },
+          {
+            "name": "ed.vts.animation-active",
+            "type": "boolean",
+            "label": {
+              "en": "This animation playing",
+              "ru": "Эта анимация играет"
+            },
+            "argument": {
+              "label": {
+                "en": "Animation",
+                "ru": "Анимация"
+              },
+              "optionsFrom": "animations"
+            }
+          },
+          {
+            "name": "ed.vts.hotkey",
+            "type": "string",
+            "label": {
+              "en": "Last hotkey",
+              "ru": "Последний хоткей"
+            },
+            "description": {
+              "en": "Whatever fired last, whoever fired it — you, a key press, or another plugin",
+              "ru": "Что сработало последним, от кого угодно: от вас, с клавиатуры или из другого плагина"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "type": "ed.vts.trigger-hotkey",
+            "icon": "star",
+            "label": {
+              "en": "Trigger hotkey",
+              "ru": "Запустить хоткей"
+            },
+            "description": {
+              "en": "Runs one of the current model's hotkeys: an animation, an outfit, anything you set up",
+              "ru": "Запускает хоткей текущей модели: анимацию, одежду, что угодно из настроенного"
+            },
+            "params": [
+              {
+                "name": "hotkey",
+                "type": "select",
+                "label": {
+                  "en": "Hotkey",
+                  "ru": "Хоткей"
+                },
+                "optionsFrom": "hotkeys",
+                "description": {
+                  "en": "Named as in VTube Studio. A hotkey of a model that is not loaded does nothing",
+                  "ru": "Название как в VTube Studio. Хоткей незагруженной модели ничего не сделает"
+                }
+              }
+            ]
+          },
+          {
+            "type": "ed.vts.set-expression",
+            "icon": "smile",
+            "label": {
+              "en": "Expression",
+              "ru": "Выражение"
+            },
+            "params": [
+              {
+                "name": "expression",
+                "type": "select",
+                "label": {
+                  "en": "Expression",
+                  "ru": "Выражение"
+                },
+                "optionsFrom": "expressions"
+              },
+              {
+                "name": "mode",
+                "type": "select",
+                "label": {
+                  "en": "What to do",
+                  "ru": "Что сделать"
+                },
+                "default": "toggle",
+                "options": [
+                  {
+                    "value": "toggle",
+                    "label": {
+                      "en": "Toggle",
+                      "ru": "Переключить"
+                    }
+                  },
+                  {
+                    "value": "on",
+                    "label": {
+                      "en": "Turn on",
+                      "ru": "Включить"
+                    }
+                  },
+                  {
+                    "value": "off",
+                    "label": {
+                      "en": "Turn off",
+                      "ru": "Выключить"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "fade",
+                "type": "number",
+                "label": {
+                  "en": "Fade, seconds",
+                  "ru": "Плавность, секунды"
+                },
+                "default": 0.25,
+                "min": 0,
+                "max": 2,
+                "step": 0.05,
+                "required": false
+              }
+            ]
+          },
+          {
+            "type": "ed.vts.load-model",
+            "icon": "person",
+            "label": {
+              "en": "Load model",
+              "ru": "Загрузить модель"
+            },
+            "params": [
+              {
+                "name": "model",
+                "type": "select",
+                "label": {
+                  "en": "Model",
+                  "ru": "Модель"
+                },
+                "optionsFrom": "models"
+              }
+            ]
+          }
+        ],
+        "presets": [
+          {
+            "name": "expression",
+            "label": {
+              "en": "Expression",
+              "ru": "Выражение"
+            },
+            "description": {
+              "en": "Toggles an expression and shows whether it is on. Choose which in the key editor",
+              "ru": "Переключает выражение и показывает, включено ли оно. Какое — в редакторе кнопки"
+            },
+            "button": {
+              "stateFrom": "ed.vts.expression",
+              "states": [
+                {
+                  "id": "off",
+                  "when": false,
+                  "visual": {
+                    "background": "#22303c",
+                    "label": {
+                      "text": "Выражение",
+                      "fontSize": 13
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.vts.set-expression",
+                        "params": {
+                          "mode": "toggle"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "on",
+                  "when": true,
+                  "visual": {
+                    "background": "#2f6f4f",
+                    "label": {
+                      "text": "Выражение",
+                      "fontSize": 13
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.vts.set-expression",
+                        "params": {
+                          "mode": "toggle"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "animation",
+            "label": {
+              "en": "Animation",
+              "ru": "Анимация"
+            },
+            "description": {
+              "en": "Runs a hotkey and lights up while the animation it started is playing",
+              "ru": "Запускает хоткей и подсвечивается, пока идёт запущенная им анимация"
+            },
+            "button": {
+              "stateFrom": "ed.vts.animation-active",
+              "states": [
+                {
+                  "id": "idle",
+                  "when": false,
+                  "visual": {
+                    "background": "#22303c",
+                    "label": {
+                      "text": "Анимация",
+                      "fontSize": 13
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.vts.trigger-hotkey"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "playing",
+                  "when": true,
+                  "visual": {
+                    "background": "#3d5a80",
+                    "label": {
+                      "text": "Анимация",
+                      "fontSize": 13
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.vts.trigger-hotkey"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "model",
+            "label": {
+              "en": "Current model",
+              "ru": "Текущая модель"
+            },
+            "description": {
+              "en": "Shows which model is on screen",
+              "ru": "Показывает, какая модель на экране"
+            },
+            "button": {
+              "states": [
+                {
+                  "id": "default",
+                  "visual": {
+                    "background": "#22303c",
+                    "label": {
+                      "text": "{{vts.model}}",
+                      "fontSize": 12
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "coverPath": "assets/logo.png",
+      "coverFile": "D:\\dev\\easydeck-plugins\\build\\ed.vts\\assets\\logo.png"
     },
     {
       "id": "ed.yandex",
@@ -96,7 +2814,964 @@
         "en": "EasyDeck",
         "ru": "EasyDeck"
       },
-      "cover": "plugin:ed.yandex/assets/maxresdefault.jpg"
+      "cover": "plugin:ed.yandex/assets/maxresdefault.jpg",
+      "manifest": {
+        "name": {
+          "en": "Yandex Station",
+          "ru": "Яндекс Станция"
+        },
+        "description": {
+          "en": "Music, volume and Alice on Yandex speakers around the house",
+          "ru": "Музыка, громкость и Алиса на Яндекс Станциях по всему дому"
+        },
+        "version": "1.0.0",
+        "apiVersion": 1,
+        "author": {
+          "en": "EasyDeck",
+          "ru": "EasyDeck"
+        },
+        "cover": "plugin:ed.yandex/assets/maxresdefault.jpg",
+        "screenshots": [
+          "plugin:ed.yandex/assets/cover.svg"
+        ],
+        "settings": [
+          {
+            "name": "enabled",
+            "type": "boolean",
+            "label": {
+              "en": "Connect to Yandex speakers",
+              "ru": "Подключаться к Яндекс Станциям"
+            },
+            "default": false,
+            "required": false
+          },
+          {
+            "name": "speaker",
+            "type": "select",
+            "required": false,
+            "label": {
+              "en": "Speaker",
+              "ru": "Колонка"
+            },
+            "optionsFrom": "speakers",
+            "description": {
+              "en": "The one keys drive unless they name another. Press Find speakers below to fill this in",
+              "ru": "На неё работают клавиши, если в них не выбрана другая. Список заполняет кнопка «Найти колонки»"
+            },
+            "emptyNote": {
+              "en": "No speakers found yet — sign in, then press Find speakers",
+              "ru": "Колонок пока нет — войдите и нажмите «Найти колонки»"
+            }
+          },
+          {
+            "name": "token",
+            "type": "string",
+            "secret": true,
+            "required": false,
+            "label": {
+              "en": "Yandex account",
+              "ru": "Аккаунт Яндекса"
+            },
+            "description": {
+              "en": "Filled in by Sign in below. Your password is never asked for or stored",
+              "ru": "Заполняется кнопкой «Войти». Пароль не спрашивается и не хранится"
+            }
+          },
+          {
+            "name": "devices",
+            "type": "string",
+            "secret": true,
+            "internal": true,
+            "required": false,
+            "label": {
+              "en": "Known speakers",
+              "ru": "Известные колонки"
+            }
+          }
+        ],
+        "commands": [
+          {
+            "name": "login",
+            "label": {
+              "en": "Sign in",
+              "ru": "Войти"
+            },
+            "icon": "link",
+            "description": {
+              "en": "Opens a Yandex page to confirm on your phone. No password is entered here",
+              "ru": "Откроет страницу Яндекса для подтверждения с телефона. Пароль здесь не вводится"
+            }
+          },
+          {
+            "name": "rescan",
+            "label": {
+              "en": "Find speakers",
+              "ru": "Найти колонки"
+            },
+            "icon": "globe",
+            "description": {
+              "en": "Looks for speakers on the network and reads their names and rooms",
+              "ru": "Ищет колонки в сети и читает их названия и комнаты"
+            }
+          },
+          {
+            "name": "signout",
+            "label": {
+              "en": "Sign out",
+              "ru": "Выйти"
+            },
+            "icon": "stop",
+            "confirm": {
+              "en": "Forget this Yandex account and every speaker found with it?",
+              "ru": "Забыть аккаунт Яндекса и все найденные колонки?"
+            }
+          }
+        ],
+        "variables": [
+          {
+            "name": "ed.yandex.connected",
+            "type": "boolean",
+            "label": {
+              "en": "Speaker connected",
+              "ru": "Колонка на связи"
+            },
+            "initial": false,
+            "argument": {
+              "label": {
+                "en": "Speaker",
+                "ru": "Колонка"
+              },
+              "description": {
+                "en": "Leave empty for the one chosen in settings",
+                "ru": "Оставьте пустым для той, что выбрана в настройках"
+              },
+              "optionsFrom": "speakers"
+            }
+          },
+          {
+            "name": "ed.yandex.speaker",
+            "type": "string",
+            "label": {
+              "en": "Chosen speaker",
+              "ru": "Выбранная колонка"
+            },
+            "description": {
+              "en": "The name of the speaker the settings chose, which the variables with no argument are about",
+              "ru": "Название колонки, выбранной в настройках, — о ней говорят переменные без аргумента"
+            }
+          },
+          {
+            "name": "ed.yandex.playing",
+            "type": "boolean",
+            "label": {
+              "en": "Playing",
+              "ru": "Играет"
+            },
+            "initial": false,
+            "argument": {
+              "label": {
+                "en": "Speaker",
+                "ru": "Колонка"
+              },
+              "description": {
+                "en": "Leave empty for the one chosen in settings",
+                "ru": "Оставьте пустым для той, что выбрана в настройках"
+              },
+              "optionsFrom": "speakers"
+            }
+          },
+          {
+            "name": "ed.yandex.title",
+            "type": "string",
+            "label": {
+              "en": "Track",
+              "ru": "Трек"
+            },
+            "argument": {
+              "label": {
+                "en": "Speaker",
+                "ru": "Колонка"
+              },
+              "description": {
+                "en": "Leave empty for the one chosen in settings",
+                "ru": "Оставьте пустым для той, что выбрана в настройках"
+              },
+              "optionsFrom": "speakers"
+            }
+          },
+          {
+            "name": "ed.yandex.artist",
+            "type": "string",
+            "label": {
+              "en": "Artist",
+              "ru": "Исполнитель"
+            },
+            "argument": {
+              "label": {
+                "en": "Speaker",
+                "ru": "Колонка"
+              },
+              "description": {
+                "en": "Leave empty for the one chosen in settings",
+                "ru": "Оставьте пустым для той, что выбрана в настройках"
+              },
+              "optionsFrom": "speakers"
+            }
+          },
+          {
+            "name": "ed.yandex.volume",
+            "type": "number",
+            "label": {
+              "en": "Volume, %",
+              "ru": "Громкость, %"
+            },
+            "description": {
+              "en": "Nought to a hundred, as a person reads it rather than as the speaker sends it",
+              "ru": "От нуля до ста, как читает человек, а не как присылает колонка"
+            },
+            "argument": {
+              "label": {
+                "en": "Speaker",
+                "ru": "Колонка"
+              },
+              "description": {
+                "en": "Leave empty for the one chosen in settings",
+                "ru": "Оставьте пустым для той, что выбрана в настройках"
+              },
+              "optionsFrom": "speakers"
+            }
+          },
+          {
+            "name": "ed.yandex.progress",
+            "type": "number",
+            "label": {
+              "en": "Position, s",
+              "ru": "Позиция, с"
+            },
+            "argument": {
+              "label": {
+                "en": "Speaker",
+                "ru": "Колонка"
+              },
+              "description": {
+                "en": "Leave empty for the one chosen in settings",
+                "ru": "Оставьте пустым для той, что выбрана в настройках"
+              },
+              "optionsFrom": "speakers"
+            }
+          },
+          {
+            "name": "ed.yandex.duration",
+            "type": "number",
+            "label": {
+              "en": "Length, s",
+              "ru": "Длительность, с"
+            },
+            "argument": {
+              "label": {
+                "en": "Speaker",
+                "ru": "Колонка"
+              },
+              "description": {
+                "en": "Leave empty for the one chosen in settings",
+                "ru": "Оставьте пустым для той, что выбрана в настройках"
+              },
+              "optionsFrom": "speakers"
+            }
+          },
+          {
+            "name": "ed.yandex.progress-time",
+            "type": "string",
+            "label": {
+              "en": "Position, as a clock",
+              "ru": "Позиция, часами"
+            },
+            "description": {
+              "en": "3:07, and 1:02:30 once something runs past an hour",
+              "ru": "3:07, а для длинного — 1:02:30"
+            },
+            "argument": {
+              "label": {
+                "en": "Speaker",
+                "ru": "Колонка"
+              },
+              "description": {
+                "en": "Leave empty for the one chosen in settings",
+                "ru": "Оставьте пустым для той, что выбрана в настройках"
+              },
+              "optionsFrom": "speakers"
+            }
+          },
+          {
+            "name": "ed.yandex.duration-time",
+            "type": "string",
+            "label": {
+              "en": "Length, as a clock",
+              "ru": "Длительность, часами"
+            },
+            "description": {
+              "en": "The other half of {{yandex.progress-time}} / {{yandex.duration-time}}",
+              "ru": "Вторая половина подписи {{yandex.progress-time}} / {{yandex.duration-time}}"
+            },
+            "argument": {
+              "label": {
+                "en": "Speaker",
+                "ru": "Колонка"
+              },
+              "description": {
+                "en": "Leave empty for the one chosen in settings",
+                "ru": "Оставьте пустым для той, что выбрана в настройках"
+              },
+              "optionsFrom": "speakers"
+            }
+          },
+          {
+            "name": "ed.yandex.source",
+            "type": "string",
+            "label": {
+              "en": "What is on",
+              "ru": "Что включено"
+            },
+            "description": {
+              "en": "Playlist, Radio, Album — a radio has no track list, so shuffle and repeat do nothing on one",
+              "ru": "Playlist, Radio, Album — у радио нет списка треков, поэтому перемешивание и повтор на нём не работают"
+            },
+            "argument": {
+              "label": {
+                "en": "Speaker",
+                "ru": "Колонка"
+              },
+              "description": {
+                "en": "Leave empty for the one chosen in settings",
+                "ru": "Оставьте пустым для той, что выбрана в настройках"
+              },
+              "optionsFrom": "speakers"
+            }
+          }
+        ],
+        "surfaces": [
+          {
+            "type": "ed.yandex.cover",
+            "label": {
+              "en": "Album art",
+              "ru": "Обложка"
+            },
+            "description": {
+              "en": "The cover of whatever is playing. Looks best across two keys by two",
+              "ru": "Обложка того, что играет. Лучше всего смотрится на квадрате два на два"
+            },
+            "icon": "page",
+            "params": [
+              {
+                "name": "speaker",
+                "type": "select",
+                "required": false,
+                "label": {
+                  "en": "Speaker",
+                  "ru": "Колонка"
+                },
+                "optionsFrom": "speakers",
+                "description": {
+                  "en": "Leave empty for the one chosen in settings",
+                  "ru": "Оставьте пустым для той, что выбрана в настройках"
+                }
+              }
+            ]
+          }
+        ],
+        "actions": [
+          {
+            "type": "ed.yandex.play-pause",
+            "icon": "toggle",
+            "label": {
+              "en": "Play or pause",
+              "ru": "Играть или пауза"
+            },
+            "params": [
+              {
+                "name": "mode",
+                "type": "select",
+                "default": "toggle",
+                "label": {
+                  "en": "What to do",
+                  "ru": "Что сделать"
+                },
+                "options": [
+                  {
+                    "value": "toggle",
+                    "label": {
+                      "en": "Toggle",
+                      "ru": "Переключить"
+                    }
+                  },
+                  {
+                    "value": "play",
+                    "label": {
+                      "en": "Play",
+                      "ru": "Играть"
+                    }
+                  },
+                  {
+                    "value": "pause",
+                    "label": {
+                      "en": "Pause",
+                      "ru": "Пауза"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "speaker",
+                "type": "select",
+                "required": false,
+                "label": {
+                  "en": "Speaker",
+                  "ru": "Колонка"
+                },
+                "optionsFrom": "speakers",
+                "description": {
+                  "en": "Leave empty for the one chosen in settings",
+                  "ru": "Оставьте пустым для той, что выбрана в настройках"
+                }
+              }
+            ]
+          },
+          {
+            "type": "ed.yandex.next-track",
+            "icon": "next",
+            "label": {
+              "en": "Next track",
+              "ru": "Следующий трек"
+            },
+            "params": [
+              {
+                "name": "speaker",
+                "type": "select",
+                "required": false,
+                "label": {
+                  "en": "Speaker",
+                  "ru": "Колонка"
+                },
+                "optionsFrom": "speakers",
+                "description": {
+                  "en": "Leave empty for the one chosen in settings",
+                  "ru": "Оставьте пустым для той, что выбрана в настройках"
+                }
+              }
+            ]
+          },
+          {
+            "type": "ed.yandex.prev-track",
+            "icon": "previous",
+            "label": {
+              "en": "Previous track",
+              "ru": "Предыдущий трек"
+            },
+            "params": [
+              {
+                "name": "speaker",
+                "type": "select",
+                "required": false,
+                "label": {
+                  "en": "Speaker",
+                  "ru": "Колонка"
+                },
+                "optionsFrom": "speakers",
+                "description": {
+                  "en": "Leave empty for the one chosen in settings",
+                  "ru": "Оставьте пустым для той, что выбрана в настройках"
+                }
+              }
+            ]
+          },
+          {
+            "type": "ed.yandex.rewind",
+            "icon": "clock",
+            "label": {
+              "en": "Seek",
+              "ru": "Перемотать"
+            },
+            "params": [
+              {
+                "name": "mode",
+                "type": "select",
+                "default": "forward",
+                "label": {
+                  "en": "Which way",
+                  "ru": "Куда"
+                },
+                "options": [
+                  {
+                    "value": "forward",
+                    "label": {
+                      "en": "Forward",
+                      "ru": "Вперёд"
+                    }
+                  },
+                  {
+                    "value": "back",
+                    "label": {
+                      "en": "Back",
+                      "ru": "Назад"
+                    }
+                  },
+                  {
+                    "value": "to",
+                    "label": {
+                      "en": "To position",
+                      "ru": "На позицию"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "seconds",
+                "type": "number",
+                "default": 15,
+                "min": 0,
+                "max": 3600,
+                "label": {
+                  "en": "Seconds",
+                  "ru": "Секунды"
+                }
+              },
+              {
+                "name": "speaker",
+                "type": "select",
+                "required": false,
+                "label": {
+                  "en": "Speaker",
+                  "ru": "Колонка"
+                },
+                "optionsFrom": "speakers",
+                "description": {
+                  "en": "Leave empty for the one chosen in settings",
+                  "ru": "Оставьте пустым для той, что выбрана в настройках"
+                }
+              }
+            ]
+          },
+          {
+            "type": "ed.yandex.volume",
+            "icon": "increment",
+            "label": {
+              "en": "Volume",
+              "ru": "Громкость"
+            },
+            "params": [
+              {
+                "name": "mode",
+                "type": "select",
+                "default": "up",
+                "label": {
+                  "en": "What to do",
+                  "ru": "Что сделать"
+                },
+                "options": [
+                  {
+                    "value": "up",
+                    "label": {
+                      "en": "Louder",
+                      "ru": "Громче"
+                    }
+                  },
+                  {
+                    "value": "down",
+                    "label": {
+                      "en": "Quieter",
+                      "ru": "Тише"
+                    }
+                  },
+                  {
+                    "value": "set",
+                    "label": {
+                      "en": "Set to",
+                      "ru": "Задать"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "value",
+                "type": "number",
+                "default": 10,
+                "min": 0,
+                "max": 100,
+                "label": {
+                  "en": "Per cent",
+                  "ru": "Проценты"
+                },
+                "description": {
+                  "en": "How much to move it by, or what to set it to",
+                  "ru": "На сколько изменить или какую выставить"
+                }
+              },
+              {
+                "name": "speaker",
+                "type": "select",
+                "required": false,
+                "label": {
+                  "en": "Speaker",
+                  "ru": "Колонка"
+                },
+                "optionsFrom": "speakers",
+                "description": {
+                  "en": "Leave empty for the one chosen in settings",
+                  "ru": "Оставьте пустым для той, что выбрана в настройках"
+                }
+              }
+            ]
+          },
+          {
+            "type": "ed.yandex.repeat",
+            "icon": "cycle",
+            "label": {
+              "en": "Repeat",
+              "ru": "Повтор"
+            },
+            "description": {
+              "en": "Does nothing while a radio station is on: a radio has no track list to repeat",
+              "ru": "Ничего не делает на радио: у радио нет списка треков, который можно повторять"
+            },
+            "params": [
+              {
+                "name": "mode",
+                "type": "select",
+                "default": "cycle",
+                "label": {
+                  "en": "Mode",
+                  "ru": "Режим"
+                },
+                "options": [
+                  {
+                    "value": "cycle",
+                    "label": {
+                      "en": "Next mode",
+                      "ru": "Следующий режим"
+                    }
+                  },
+                  {
+                    "value": "None",
+                    "label": {
+                      "en": "Off",
+                      "ru": "Выключить"
+                    }
+                  },
+                  {
+                    "value": "One",
+                    "label": {
+                      "en": "One track",
+                      "ru": "Один трек"
+                    }
+                  },
+                  {
+                    "value": "All",
+                    "label": {
+                      "en": "Everything",
+                      "ru": "Всё подряд"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "speaker",
+                "type": "select",
+                "required": false,
+                "label": {
+                  "en": "Speaker",
+                  "ru": "Колонка"
+                },
+                "optionsFrom": "speakers",
+                "description": {
+                  "en": "Leave empty for the one chosen in settings",
+                  "ru": "Оставьте пустым для той, что выбрана в настройках"
+                }
+              }
+            ]
+          },
+          {
+            "type": "ed.yandex.shuffle",
+            "icon": "state",
+            "label": {
+              "en": "Shuffle",
+              "ru": "Перемешать"
+            },
+            "description": {
+              "en": "Does nothing while a radio station is on",
+              "ru": "Ничего не делает на радио"
+            },
+            "params": [
+              {
+                "name": "mode",
+                "type": "select",
+                "default": "toggle",
+                "label": {
+                  "en": "What to do",
+                  "ru": "Что сделать"
+                },
+                "options": [
+                  {
+                    "value": "toggle",
+                    "label": {
+                      "en": "Toggle",
+                      "ru": "Переключить"
+                    }
+                  },
+                  {
+                    "value": "on",
+                    "label": {
+                      "en": "On",
+                      "ru": "Включить"
+                    }
+                  },
+                  {
+                    "value": "off",
+                    "label": {
+                      "en": "Off",
+                      "ru": "Выключить"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "speaker",
+                "type": "select",
+                "required": false,
+                "label": {
+                  "en": "Speaker",
+                  "ru": "Колонка"
+                },
+                "optionsFrom": "speakers",
+                "description": {
+                  "en": "Leave empty for the one chosen in settings",
+                  "ru": "Оставьте пустым для той, что выбрана в настройках"
+                }
+              }
+            ]
+          },
+          {
+            "type": "ed.yandex.command",
+            "icon": "text",
+            "label": {
+              "en": "Tell Alice",
+              "ru": "Команда Алисе"
+            },
+            "description": {
+              "en": "Anything you would say out loud: \"turn on the desk lamp\", \"set a timer for ten minutes\"",
+              "ru": "Что угодно, что вы сказали бы вслух: «включи ночник», «поставь таймер на десять минут»"
+            },
+            "params": [
+              {
+                "name": "text",
+                "type": "string",
+                "label": {
+                  "en": "Command",
+                  "ru": "Команда"
+                },
+                "placeholder": {
+                  "en": "turn on the desk lamp",
+                  "ru": "включи ночник"
+                }
+              },
+              {
+                "name": "speaker",
+                "type": "select",
+                "required": false,
+                "label": {
+                  "en": "Speaker",
+                  "ru": "Колонка"
+                },
+                "optionsFrom": "speakers",
+                "description": {
+                  "en": "Leave empty for the one chosen in settings",
+                  "ru": "Оставьте пустым для той, что выбрана в настройках"
+                }
+              }
+            ]
+          },
+          {
+            "type": "ed.yandex.say",
+            "icon": "speaker",
+            "label": {
+              "en": "Say out loud",
+              "ru": "Сказать вслух"
+            },
+            "description": {
+              "en": "The speaker reads the text out. Alice does not answer — this is not a command",
+              "ru": "Колонка произносит текст. Алиса не отвечает — это не команда"
+            },
+            "params": [
+              {
+                "name": "text",
+                "type": "string",
+                "label": {
+                  "en": "Words",
+                  "ru": "Текст"
+                },
+                "placeholder": {
+                  "en": "the stream starts in a minute",
+                  "ru": "стрим начинается через минуту"
+                }
+              },
+              {
+                "name": "speaker",
+                "type": "select",
+                "required": false,
+                "label": {
+                  "en": "Speaker",
+                  "ru": "Колонка"
+                },
+                "optionsFrom": "speakers",
+                "description": {
+                  "en": "Leave empty for the one chosen in settings",
+                  "ru": "Оставьте пустым для той, что выбрана в настройках"
+                }
+              }
+            ]
+          }
+        ],
+        "presets": [
+          {
+            "name": "cover",
+            "label": {
+              "en": "Album art",
+              "ru": "Обложка"
+            },
+            "description": {
+              "en": "Shows what is playing and pauses it when pressed. Stretch it over two keys by two",
+              "ru": "Показывает, что играет, и ставит на паузу. Растяните на квадрат два на два"
+            },
+            "button": {
+              "stateFrom": "ed.yandex.playing",
+              "states": [
+                {
+                  "id": "paused",
+                  "when": false,
+                  "visual": {
+                    "background": "#1a1c22",
+                    "surface": {
+                      "type": "ed.yandex.cover"
+                    },
+                    "label": {
+                      "text": "{{yandex.title}}",
+                      "fontSize": 11
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.yandex.play-pause",
+                        "params": {
+                          "mode": "toggle"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "playing",
+                  "when": true,
+                  "visual": {
+                    "background": "#1a1c22",
+                    "surface": {
+                      "type": "ed.yandex.cover"
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.yandex.play-pause",
+                        "params": {
+                          "mode": "toggle"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "play-pause",
+            "label": {
+              "en": "Play / pause",
+              "ru": "Играть / пауза"
+            },
+            "button": {
+              "stateFrom": "ed.yandex.playing",
+              "states": [
+                {
+                  "id": "paused",
+                  "when": false,
+                  "visual": {
+                    "background": "#22303c",
+                    "icon": {
+                      "source": "plugin:ed.yandex/play.svg"
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.yandex.play-pause",
+                        "params": {
+                          "mode": "toggle"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "playing",
+                  "when": true,
+                  "visual": {
+                    "background": "#2f6f4f",
+                    "icon": {
+                      "source": "plugin:ed.yandex/pause.svg"
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "ed.yandex.play-pause",
+                        "params": {
+                          "mode": "toggle"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "now-playing",
+            "label": {
+              "en": "What is playing",
+              "ru": "Что играет"
+            },
+            "description": {
+              "en": "The track and the artist, as text",
+              "ru": "Трек и исполнитель, текстом"
+            },
+            "button": {
+              "states": [
+                {
+                  "id": "default",
+                  "visual": {
+                    "background": "#1a1c22",
+                    "label": {
+                      "text": "{{yandex.title}}\n{{yandex.artist}}",
+                      "fontSize": 11
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "coverPath": "assets/maxresdefault.jpg",
+      "coverFile": "D:\\dev\\easydeck-plugins\\build\\ed.yandex\\assets\\maxresdefault.jpg"
     }
   ]
 }

@@ -35,6 +35,20 @@ const pluginsRoot = join(root, 'plugins');
 const buildRoot = join(root, 'build');
 const registryFile = join(root, 'registry', 'index.json');
 
+/**
+ * The shop window: the index, every manifest and every cover, in one archive.
+ *
+ * A GitHub release is a flat list of assets — no folders — and a file per
+ * plugin per purpose was eleven of them at five plugins. It is also what
+ * stops a list of names downloading the plugins themselves: covers used to be
+ * read out of each archive, so drawing five rows fetched 317 KB of code.
+ *
+ * Screenshots stay in their plugin. They are large, rare, and only ever
+ * wanted by somebody who opened one card — and that somebody is usually
+ * about to download the plugin anyway.
+ */
+const STORE_FILE = 'store.zip';
+
 /** The folders the host reads as data; everything else is source. */
 const CARRIED = ['icons', 'locales', 'assets', 'natives'];
 
@@ -76,13 +90,45 @@ async function main() {
     throw new Error(`duplicate plugin id: ${duplicates.map((entry) => entry.id).join(', ')}`);
   }
 
+  const index = JSON.stringify({ generated: new Date().toISOString(), plugins: entries }, null, 2);
+
+  // Committed as well as packed: the repository should show what the store
+  // will show, in a form a person can read in a diff.
   await mkdir(dirname(registryFile), { recursive: true });
-  await writeFile(
-    registryFile,
-    JSON.stringify({ generated: new Date().toISOString(), plugins: entries }, null, 2),
-    'utf8',
+  await writeFile(registryFile, index, 'utf8');
+
+  const window = [{ name: 'index.json', bytes: Buffer.from(index, 'utf8'), compress: true }];
+
+  for (const entry of entries) {
+    window.push({
+      name: `${entry.id}.json`,
+      bytes: Buffer.from(JSON.stringify(entry.manifest), 'utf8'),
+      compress: true,
+    });
+
+    // Filed under the plugin whose reference names it, so `plugin:ed.obs/…`
+    // resolves by looking up `ed.obs/…` and nothing has to be rewritten.
+    if (entry.coverFile) {
+      window.push({
+        name: `${entry.id}/${entry.coverPath}`,
+        bytes: await readFile(entry.coverFile),
+        compress: !ALREADY_COMPRESSED.has(extname(entry.coverPath).toLowerCase()),
+      });
+    }
+
+    // The manifest rode in the index once and was 97 to 99 per cent of it;
+    // it travels in the window now, and not in the entry a row is built from.
+    delete entry.manifest;
+    delete entry.coverFile;
+    delete entry.coverPath;
+  }
+
+  const packed = writeZip(window);
+  await writeFile(join(buildRoot, STORE_FILE), packed);
+
+  console.log(
+    `window: ${entries.length} plugin(s), ${(packed.byteLength / 1024).toFixed(0)} KB -> build/${STORE_FILE}`,
   );
-  console.log(`registry: ${entries.length} plugin(s) -> ${relative(root, registryFile)}`);
 }
 
 async function buildOne(author, name, folder) {
@@ -152,24 +198,6 @@ async function buildOne(author, name, folder) {
   const bytes = writeZip(await pack(final));
   await writeFile(join(buildRoot, archive), bytes);
 
-  /*
-   * The full manifest, in a file of its own.
-   *
-   * It used to ride inside the index, and it was 97 to 99 per cent of every
-   * entry there: four plugins made a hundred-kilobyte index, of which one and
-   * a half kilobytes was what a list actually draws. A store paid for every
-   * plugin's actions, variables, settings and presets in order to show four
-   * names — and would have paid a megabyte at fifty plugins.
-   *
-   * So the index carries the row and this carries the card, fetched when
-   * somebody opens one.
-   */
-  await writeFile(
-    join(buildRoot, `${manifest.id}.json`),
-    JSON.stringify(storefront(manifest), null, 2),
-    'utf8',
-  );
-
   return {
     id: manifest.id,
     author,
@@ -187,7 +215,21 @@ async function buildOne(author, name, folder) {
     ...(manifest.description ? { description: manifest.description } : {}),
     ...(manifest.author ? { by: manifest.author } : {}),
     ...(manifest.cover ? { cover: manifest.cover } : {}),
+    /*
+     * Carried out to the caller and deleted there: the window needs the
+     * manifest and the cover's bytes, and a row must not have either.
+     */
+    manifest: storefront(manifest),
+    ...coverInside(manifest.cover, final),
   };
+}
+
+/** Where a cover's file is, and what it is called inside the window. */
+function coverInside(reference, folder) {
+  const found = /^plugin:[A-Za-z0-9][A-Za-z0-9._-]*\/(.+)$/.exec(reference ?? '');
+  if (!found) return {};
+
+  return { coverPath: found[1], coverFile: join(folder, found[1]) };
 }
 
 /**
