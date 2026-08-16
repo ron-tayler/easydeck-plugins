@@ -1,0 +1,91 @@
+# Builds every plugin and publishes them as one release.
+#
+# The store fetches `releases/latest/download/<name>` — an address GitHub
+# resolves to the newest release by itself — so publishing is the whole of
+# deployment: no index to commit back, no URL to update anywhere, and nothing
+# for a client to be told. See docs/plugin-distribution.md in the main
+# repository.
+#
+# One release per push to main rather than per tag, because the version that
+# matters is each plugin's own, declared in its manifest. The tag here is only
+# a name for "the set of plugins as of this commit".
+name: release
+
+on:
+  push:
+    branches: [main]
+  # For rebuilding a release after a change to this workflow, without an
+  # empty commit to trigger it.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  # A second push while the first is still building would race to move the
+  # same tag; the newer one wins and the older is abandoned.
+  group: release
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: easydeck-plugins
+
+      # The SDK follows the main repository's engine through a `link:`
+      # dependency, and the build script borrows its ZIP writer — so the two
+      # checkouts have to sit beside each other here exactly as they do on a
+      # developer's machine.
+      - uses: actions/checkout@v4
+        with:
+          repository: ron-tayler/easydeck
+          path: EasyDeck
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: easydeck-plugins/pnpm-lock.yaml
+
+      # Only what the plugins compile and pack against: the engine for types,
+      # core for the ZIP writer.
+      - name: Build the host packages
+        working-directory: EasyDeck
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --filter @easydeck/engine build
+          pnpm --filter @easydeck/core build
+
+      - name: Build the plugins
+        working-directory: easydeck-plugins
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm typecheck
+          pnpm test
+          pnpm build
+
+      # The index goes in beside the archives, under the name the store asks
+      # for. `file` inside it is a bare filename, which is what lets the same
+      # index serve a folder on a developer's machine and a release here.
+      - name: Collect what gets published
+        working-directory: easydeck-plugins
+        run: cp registry/index.json build/index.json
+
+      - name: Publish
+        working-directory: easydeck-plugins
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete plugins --yes --cleanup-tag || true
+          gh release create plugins \
+            --title "Plugins" \
+            --notes "Built from ${{ github.sha }}. Fetched by the store from releases/latest." \
+            build/index.json build/*.easydeck
