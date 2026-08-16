@@ -88,7 +88,7 @@ export const yandexManifest: PluginManifest = {
     en: 'Music, volume and Alice on Yandex speakers around the house',
     ru: 'Музыка, громкость и Алиса на Яндекс Станциях по всему дому',
   },
-  version: '1.0.0',
+  version: '1.1.0',
   apiVersion: PLUGIN_API_VERSION,
   author: { en: 'EasyDeck', ru: 'EasyDeck' },
 
@@ -635,8 +635,6 @@ interface KnownSpeaker {
   readonly room?: string;
   readonly host?: string;
   readonly port?: number;
-  /** The key this speaker's own socket checks. Kept; see the `devices` setting. */
-  readonly token?: string;
   /** Seen on the network but not in this account — a neighbour's, a flatmate's. */
   readonly foreign?: boolean;
 }
@@ -647,6 +645,14 @@ export interface YandexPluginOptions {
   readonly discover?: typeof discoverSpeakers;
   /** Off only in tests, where the stand-in speaker is a plain socket. */
   readonly secure?: boolean;
+  /**
+   * Where a speaker's key comes from.
+   *
+   * Overridden by tests, which have no account to ask. In the app it is the
+   * cloud: an x-token buys a music token, and a music token buys one key per
+   * speaker — see yandex-account.ts.
+   */
+  readonly deviceToken?: (speaker: { deviceId: string; platform: string }) => Promise<string>;
 }
 
 export class YandexPlugin implements Plugin {
@@ -665,6 +671,17 @@ export class YandexPlugin implements Plugin {
    */
   private readonly covers = new Map<string, string>();
   private readonly fetching = new Set<string>();
+
+  /**
+   * The key each speaker's socket is currently accepting.
+   *
+   * In memory and nowhere else, because these do not last: measured, a
+   * speaker stops accepting one within a day. They used to be written into
+   * the settings alongside the addresses, so a deck that worked in the
+   * evening was refused in the morning and stayed refused until somebody
+   * pressed "Find speakers" — which is the one thing nobody thinks to do.
+   */
+  private readonly tokens = new Map<string, string>();
 
   /** True while this plugin is writing its own settings; see `onSettingsChanged`. */
   private writing = false;
@@ -790,11 +807,6 @@ export class YandexPlugin implements Plugin {
       found.set(speaker.deviceId, {
         ...speaker,
         ...(local ? { host: local.host, port: local.port } : {}),
-        // Kept from the last scan: a token does not expire, and the endpoint
-        // that grants them dislikes being asked twice.
-        ...(this.known.get(speaker.deviceId)?.token
-          ? { token: this.known.get(speaker.deviceId)!.token }
-          : {}),
       });
     }
 
@@ -810,18 +822,15 @@ export class YandexPlugin implements Plugin {
       });
     }
 
-    // Tokens for the reachable ones we have never asked about. Serial rather
-    // than parallel, because this is the endpoint that answers 429 to a burst.
-    for (const speaker of found.values()) {
-      if (speaker.foreign || speaker.token || !speaker.host) continue;
-      try {
-        const token = await deviceToken(key, speaker.deviceId, speaker.platform);
-        found.set(speaker.deviceId, { ...speaker, token });
-      } catch (error) {
-        host.log('warn', `${speaker.name}: ${(error as Error).message}`);
-      }
-    }
-
+    /*
+     * No tokens are fetched here any more.
+     *
+     * They are asked for when a connection is opened, because that is when
+     * they are needed and roughly how long they last. A scan that collected
+     * them was collecting things that would be stale before the deck was next
+     * switched on.
+     */
+    this.tokens.clear();
     this.known.clear();
     for (const [id, speaker] of found) this.known.set(id, speaker);
     await this.write('devices', JSON.stringify([...found.values()]));
@@ -907,7 +916,7 @@ export class YandexPlugin implements Plugin {
     const host = this.require();
 
     for (const speaker of this.known.values()) {
-      if (speaker.foreign || !speaker.host || !speaker.token) continue;
+      if (speaker.foreign || !speaker.host) continue;
       if (this.connections.has(speaker.deviceId)) continue;
 
       const connection = new GlagolConnection({
@@ -915,7 +924,7 @@ export class YandexPlugin implements Plugin {
         port: speaker.port ?? 1961,
         ...(this.options.retryDelaysMs ? { retryDelaysMs: this.options.retryDelaysMs } : {}),
         ...(this.options.secure === false ? { secure: false } : {}),
-        token: () => this.known.get(speaker.deviceId)?.token ?? '',
+        token: (stale) => this.tokenFor(speaker, stale),
         onState: (state) => this.onState(speaker.deviceId, state),
         onConnection: (state, message) => this.onConnection(speaker, state, message),
         log: (level, text) => host.log(level, text),
@@ -933,6 +942,35 @@ export class YandexPlugin implements Plugin {
     }
   }
 
+  /**
+   * A key for one speaker, fresh when the last one was refused.
+   *
+   * Held between attempts so a reconnect after a dropped Wi-Fi costs nothing:
+   * the endpoint that grants these answers 429 to a program that asks too
+   * often, and a retry every second with a request each would find that out.
+   */
+  private async tokenFor(speaker: KnownSpeaker, stale: boolean): Promise<string> {
+    if (stale) this.tokens.delete(speaker.deviceId);
+
+    const kept = this.tokens.get(speaker.deviceId);
+    if (kept) return kept;
+
+    const token = await this.askForToken(speaker);
+    if (token !== '') this.tokens.set(speaker.deviceId, token);
+    return token;
+  }
+
+  /** The cloud, unless a test put something else in its place. */
+  private async askForToken(speaker: KnownSpeaker): Promise<string> {
+    if (this.options.deviceToken) return this.options.deviceToken(speaker);
+
+    const xToken = String(this.require().settings()['token'] ?? '');
+    if (xToken === '') return '';
+
+    const music = await musicToken(xToken);
+    return deviceToken(music, speaker.deviceId, speaker.platform);
+  }
+
   private onConnection(
     speaker: KnownSpeaker,
     state: 'connecting' | 'ready' | 'error' | 'rejected',
@@ -941,10 +979,9 @@ export class YandexPlugin implements Plugin {
     const host = this.require();
 
     if (state === 'rejected') {
-      // The token was refused. Dropped so the next scan fetches a fresh one,
-      // rather than reconnecting for ever with a key that will not open it.
-      this.known.set(speaker.deviceId, { ...speaker, token: undefined });
-      host.log('warn', `${speaker.name}: ${message ?? 'refused the token'} — press Find speakers`);
+      // Nothing to try with at all: not signed in, or this speaker is not in
+      // the account. Unlike a refused token, another attempt cannot help.
+      host.log('warn', `${speaker.name}: ${message ?? 'no token'} — press Find speakers`);
     }
 
     const anyReady = [...this.connections.values()].some((connection) => connection.open);

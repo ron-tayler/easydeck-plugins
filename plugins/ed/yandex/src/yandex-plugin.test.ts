@@ -74,7 +74,6 @@ async function bench(options: BenchOptions = {}) {
       room: 'Кабинет',
       host: '127.0.0.1',
       port,
-      token: TOKEN,
     },
     {
       deviceId: 'stranger',
@@ -107,7 +106,18 @@ async function bench(options: BenchOptions = {}) {
   const runtime = new PluginRuntime({ settings, variables });
   runtime.on('error', () => undefined);
 
-  await installForTest(yandexManifest, activateWith({ retryDelaysMs: [50, 100], secure: false }), registry, runtime);
+  await installForTest(
+    yandexManifest,
+    activateWith({
+      retryDelaysMs: [50, 100],
+      secure: false,
+      // The key is asked for when a socket opens, because a real one lasts
+      // less than a day. A test has no account to ask, so it answers here.
+      deviceToken: async (speaker) => (speaker.deviceId === 'office' ? TOKEN : ''),
+    }),
+    registry,
+    runtime,
+  );
 
   let closed = false;
   const dispose = async () => {
@@ -458,3 +468,71 @@ function last(commands: Record<string, unknown>[]): Record<string, unknown> {
   assert.ok(command, 'no command reached the speaker');
   return command;
 }
+
+describe('a key that goes stale overnight', () => {
+  it('asks for a new one instead of giving up', async () => {
+    /*
+     * Measured, not imagined: a speaker stops accepting its key within a day,
+     * and the key used to be written into the settings and reused for ever.
+     * A deck that worked in the evening was refused in the morning and stayed
+     * refused until somebody pressed "Find speakers" — which nobody does,
+     * because nothing says to.
+     */
+    const station = new FakeStation({ token: 'the-new-one' });
+    const port = await station.listen();
+
+    const dir = `${process.env['TEMP'] ?? '/tmp'}/easydeck-stale-${port}`;
+    const settings = new PluginSettingsStore(undefined, `${dir}/open`, `${dir}/sealed`);
+    await settings.save(
+      'ed.yandex',
+      {
+        enabled: true,
+        token: 'x-token',
+        devices: JSON.stringify([
+          { deviceId: 'office', platform: 'yandexmini_2', name: 'Кабинет', host: '127.0.0.1', port },
+        ]),
+      },
+      yandexManifest.settings ?? [],
+    );
+
+    const variables = new VariableStore();
+    const registry = createActionRegistry();
+    const runtime = new PluginRuntime({ settings, variables });
+    runtime.on('error', () => undefined);
+
+    // The first key is the one the speaker refuses; the second is the one it
+    // takes. Which is the shape of a token that expired while nobody looked.
+    const handed: string[] = [];
+    const keys = ['the-stale-one', 'the-new-one'];
+
+    await installForTest(
+      yandexManifest,
+      activateWith({
+        retryDelaysMs: [20, 20],
+        secure: false,
+        deviceToken: async () => {
+          const key = keys.shift() ?? 'the-new-one';
+          handed.push(key);
+          return key;
+        },
+      }),
+      registry,
+      runtime,
+    );
+
+    const deadline = Date.now() + 5000;
+    while (Date.now() < deadline && variables.get('ed.yandex.connected') !== true) {
+      await delay(20);
+    }
+
+    assert.equal(variables.get('ed.yandex.connected'), true);
+    // Refused once, asked again, connected — with no key kept on disk to go
+    // stale in the first place.
+    assert.deepEqual(handed, ['the-stale-one', 'the-new-one']);
+    assert.equal(JSON.stringify(await settings.load('ed.yandex')).includes('the-new-one'), false);
+
+    await runtime.stopAll();
+    await station.close();
+    await rm(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 20 }).catch(() => undefined);
+  });
+});

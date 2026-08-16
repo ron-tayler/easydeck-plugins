@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-16T13:56:24.411Z",
+  "generated": "2026-08-16T14:26:57.357Z",
   "plugins": [
     {
       "id": "ed.discord",
@@ -2819,11 +2819,11 @@
     {
       "id": "ed.yandex",
       "author": "ed",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "apiVersion": 1,
       "file": "ed.yandex.easydeck",
-      "sha256": "fa508c94ae59b8bbef4afc913da60744e48428a57784bfaab3a503467f264e41",
-      "bytes": 111039,
+      "sha256": "f861ada7ebaae74ce1bf52774dd17ec0f63d0b3aac4962b03e89261bcb4905ae",
+      "bytes": 111575,
       "name": {
         "en": "Yandex Station",
         "ru": "Яндекс Станция"
@@ -2846,7 +2846,7 @@
           "en": "Music, volume and Alice on Yandex speakers around the house",
           "ru": "Музыка, громкость и Алиса на Яндекс Станциях по всему дому"
         },
-        "version": "1.0.0",
+        "version": "1.1.0",
         "apiVersion": 1,
         "author": {
           "en": "EasyDeck",

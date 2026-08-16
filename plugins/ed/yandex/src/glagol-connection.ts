@@ -18,8 +18,8 @@ import { WebSocket } from 'ws';
  *
  * **A bad token is a close, not an answer.** Code 4000 with `Invalid token`,
  * and no message before it. So a socket that opens and immediately shuts is
- * not a network problem, and reconnecting for ever would be wrong: the token
- * has to be replaced first.
+ * not a network problem — it means the token has gone stale, and the next
+ * attempt needs a fresh one rather than the same one again.
  */
 
 /** What the speaker says about itself, and all this plugin reads. */
@@ -60,8 +60,15 @@ export type ConnectionState = 'connecting' | 'ready' | 'error' | 'rejected';
 export interface GlagolOptions {
   readonly host: string;
   readonly port: number;
-  /** Read afresh on every attempt, so a renewed token is picked up by a retry. */
-  readonly token: () => string;
+  /**
+   * The key for this speaker, fetched for the attempt about to be made.
+   *
+   * Asynchronous because it usually is not held: a speaker's token is
+   * short-lived, so it is asked for when a connection is opened rather than
+   * kept. `stale` says the last one was refused, which is what turns a retry
+   * into a fresh request instead of the same refusal again.
+   */
+  readonly token: (stale: boolean) => Promise<string>;
   readonly onState: (state: SpeakerState) => void;
   readonly onConnection: (state: ConnectionState, message?: string) => void;
   readonly log?: (level: 'info' | 'warn' | 'error', message: string) => void;
@@ -104,6 +111,10 @@ export class GlagolConnection {
   private retry?: NodeJS.Timeout;
   private ping?: NodeJS.Timeout;
   private stopped = false;
+  /** The token this connection is using, sent with every command. */
+  private current = '';
+  /** The last token was refused, so the next attempt must not reuse it. */
+  private refused = false;
 
   constructor(private readonly options: GlagolOptions) {}
 
@@ -144,7 +155,7 @@ export class GlagolConnection {
 
     socket.send(
       JSON.stringify({
-        conversationToken: this.options.token(),
+        conversationToken: this.current,
         id: randomUUID(),
         sentTime: Date.now(),
         payload,
@@ -158,15 +169,37 @@ export class GlagolConnection {
     clearTimeout(this.retry);
     this.retry = undefined;
 
-    const token = this.options.token();
+    this.options.onConnection('connecting');
+    void this.openSocket();
+  }
+
+  /**
+   * Gets a key for this attempt and opens the socket with it.
+   *
+   * Apart from `connect` only because asking for the token is a request over
+   * the network now: it used to be a value held in settings, which is what
+   * made a deck stop working overnight.
+   */
+  private async openSocket(): Promise<void> {
+    let token: string;
+    try {
+      token = await this.options.token(this.refused);
+      this.refused = false;
+    } catch (error) {
+      this.options.onConnection('error', (error as Error).message);
+      this.scheduleRetry();
+      return;
+    }
+
+    if (this.stopped) return;
     if (token === '') {
-      // Nothing to try with. Said once, rather than attempted and refused
-      // every few seconds for as long as the program runs.
+      // Nothing to try with — not signed in, or this speaker belongs to
+      // somebody else. Said once rather than attempted every few seconds.
       this.options.onConnection('rejected', 'No token for this speaker yet');
       return;
     }
 
-    this.options.onConnection('connecting');
+    this.current = token;
 
     const scheme = this.options.secure === false ? 'ws' : 'wss';
     const socket = new WebSocket(`${scheme}://${this.options.host}:${this.options.port}`, {
@@ -213,9 +246,16 @@ export class GlagolConnection {
       this.socket = undefined;
 
       if (code === INVALID_TOKEN) {
-        // Retrying changes nothing until a new token is fetched, and the
-        // plugin is the one that can do that.
-        this.options.onConnection('rejected', String(reason) || 'The speaker refused the token');
+        /*
+         * The key has gone stale, which happens on its own within a day.
+         *
+         * This used to give up and wait for somebody to press "Find speakers"
+         * — a deck that worked yesterday and not this morning. Now the next
+         * attempt asks for a new token instead of offering the same one.
+         */
+        this.refused = true;
+        this.options.onConnection('error', String(reason) || 'The speaker refused the token');
+        this.scheduleRetry();
         return;
       }
 
