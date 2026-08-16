@@ -204,7 +204,7 @@ describe('the Discord plugin', () => {
     await bed.run('ed.discord.join', { channel: 'c-voice' });
     assert.deepEqual(bed.sent().at(-2), {
       cmd: 'SELECT_VOICE_CHANNEL',
-      args: { channel_id: 'c-voice', force: false },
+      args: { channel_id: 'c-voice', force: true },
     });
 
     // Null rather than an empty string: Discord reads that field for a
@@ -212,7 +212,27 @@ describe('the Discord plugin', () => {
     await bed.run('ed.discord.join', {});
     assert.deepEqual(bed.sent().at(-2), {
       cmd: 'SELECT_VOICE_CHANNEL',
-      args: { channel_id: null, force: false },
+      args: { channel_id: null, force: true },
+    });
+
+    await bed.dispose();
+  });
+
+  it('moves somebody who is already in a call, which is most of the time', async () => {
+    /*
+     * Regression, and one a log found rather than a test: without `force`,
+     * Discord answers "User is already joined to a voice channel" and does
+     * nothing — so the key worked from the lobby and failed from anywhere
+     * else, which is the half of the time nobody presses it.
+     */
+    const bed = await bench({ token: TOKEN, channel: CHANNEL });
+    await bed.until('the connection', () => bed.variables.get('ed.discord.connected') === true);
+
+    await bed.run('ed.discord.join', { channel: 'c-other' });
+
+    assert.deepEqual(bed.sent().at(-2), {
+      cmd: 'SELECT_VOICE_CHANNEL',
+      args: { channel_id: 'c-other', force: true },
     });
 
     await bed.dispose();

@@ -1,14 +1,14 @@
 {
-  "generated": "2026-08-16T14:26:57.357Z",
+  "generated": "2026-08-16T14:37:38.055Z",
   "plugins": [
     {
       "id": "ed.discord",
       "author": "ed",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "apiVersion": 1,
       "file": "ed.discord.easydeck",
-      "sha256": "c938159c17f37f10fc5557c21a99e321c4811d3f4da06a251c4c2124fbebe62e",
-      "bytes": 25485,
+      "sha256": "b5fc505e01eb9dd67d50f3e9f6b437999e0818feffcd8b611c3bc964ba00ceb7",
+      "bytes": 25698,
       "name": {
         "en": "Discord",
         "ru": "Discord"
@@ -36,7 +36,7 @@
           "en": "Mute, deafen, voice channels and who is talking",
           "ru": "Микрофон, наушники, голосовые каналы и кто говорит"
         },
-        "version": "1.1.0",
+        "version": "1.2.0",
         "apiVersion": 1,
         "settings": [
           {

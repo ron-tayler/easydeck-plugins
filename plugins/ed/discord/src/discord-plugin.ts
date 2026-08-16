@@ -68,7 +68,7 @@ export const discordManifest: PluginManifest = {
     en: 'Mute, deafen, voice channels and who is talking',
     ru: 'Микрофон, наушники, голосовые каналы и кто говорит',
   },
-  version: '1.1.0',
+  version: '1.2.0',
   apiVersion: PLUGIN_API_VERSION,
 
   settings: [
@@ -1017,7 +1017,17 @@ export class DiscordPlugin implements Plugin {
          */
         await this.require4().command('SELECT_VOICE_CHANNEL', {
           channel_id: channel === '' ? null : channel,
-          force: false,
+          /*
+           * Move, rather than refuse to move.
+           *
+           * Without this Discord answers "User is already joined to a voice
+           * channel" and does nothing — so the key worked from the lobby and
+           * failed from anywhere else, which is the half of the time nobody
+           * presses it. `force` is not force in the sense of overriding the
+           * person: pressing a key that names a channel *is* the consent, and
+           * the alternative is a key that only works when it is not needed.
+           */
+          force: true,
         });
         await this.readChannel();
       },

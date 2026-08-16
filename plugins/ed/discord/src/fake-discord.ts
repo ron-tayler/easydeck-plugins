@@ -42,6 +42,9 @@ export interface FakeChannel {
   }[];
 }
 
+/** What the fake throws when a command is refused by its own rules. */
+class RefusedByDiscord extends Error {}
+
 export class FakeDiscord {
   private readonly server: Server;
   private readonly open = new Set<Socket>();
@@ -136,7 +139,17 @@ export class FakeDiscord {
       return;
     }
 
-    write(socket, OP_FRAME, { cmd, nonce, data: this.answer(cmd, args) });
+    try {
+      write(socket, OP_FRAME, { cmd, nonce, data: this.answer(cmd, args) });
+    } catch (error) {
+      // Some commands refuse on their own terms rather than by configuration.
+      write(socket, OP_FRAME, {
+        cmd,
+        nonce,
+        evt: 'ERROR',
+        data: { code: 5003, message: (error as Error).message },
+      });
+    }
   }
 
   private answer(cmd: string, args: Record<string, unknown>): Record<string, unknown> {
@@ -176,8 +189,19 @@ export class FakeDiscord {
       case 'GET_CHANNEL':
         return this.rooms[String(args['channel_id'] ?? '')] ?? {};
 
-      case 'SELECT_VOICE_CHANNEL':
+      /*
+       * Refuses to move somebody who is already somewhere, unless forced.
+       *
+       * Discord's own behaviour, and the reason a "go to this channel" key
+       * did nothing for anybody who was already in a call: "User is already
+       * joined to a voice channel."
+       */
+      case 'SELECT_VOICE_CHANNEL': {
+        if (this.channel && args['channel_id'] !== null && args['force'] !== true) {
+          throw new RefusedByDiscord('User is already joined to a voice channel.');
+        }
         return this.channel ? { ...this.channel } : {};
+      }
 
       case 'GET_GUILDS':
         return { guilds: [{ id: 'g1', name: 'Дом' }] };
