@@ -99,7 +99,7 @@ export const yandexManifest: PluginManifest = {
    * so the store's list stays a list of names and one small picture each,
    * and the large ones are fetched only by whoever opens the card.
    */
-  cover: 'plugin:ed.yandex/assets/cover.svg',
+  cover: 'plugin:ed.yandex/assets/maxresdefault.jpg',
   screenshots: ['plugin:ed.yandex/assets/cover.svg'],
 
   settings: [

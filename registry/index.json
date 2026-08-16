@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-16T11:42:27.849Z",
+  "generated": "2026-08-16T12:41:49.292Z",
   "plugins": [
     {
       "id": "ed.obs",
@@ -7,8 +7,8 @@
       "version": "1.0.0",
       "apiVersion": 1,
       "file": "ed.obs.easydeck",
-      "sha256": "12ce2eda0bb49dc137e8259711068cdceb8014fa2266e2fff11ae79505075deb",
-      "bytes": 47268,
+      "sha256": "d00cb3266e9a34259061358a8afe179c5f8ea6e7c6eff42abdbf75ed57a3f2ca",
+      "bytes": 53306,
       "name": {
         "en": "OBS",
         "ru": "OBS"
@@ -16,7 +16,8 @@
       "description": {
         "en": "Scenes, streaming, recording and audio in OBS Studio",
         "ru": "Сцены, стрим, запись и звук в OBS Studio"
-      }
+      },
+      "cover": "plugin:ed.obs/assets/logo.webp"
     },
     {
       "id": "ed.soundpad",
@@ -24,8 +25,8 @@
       "version": "1.0.0",
       "apiVersion": 1,
       "file": "ed.soundpad.easydeck",
-      "sha256": "a307e06620a8c2289b68d7eadaab035c7d813a8faebeccaad60ef23510be02d2",
-      "bytes": 13891,
+      "sha256": "27db0c58caf17c4e14aae0bc72e0fdef68ebe8ee6c34a78d05d9da4e13478528",
+      "bytes": 31613,
       "name": {
         "en": "Soundpad",
         "ru": "Soundpad"
@@ -33,7 +34,8 @@
       "description": {
         "en": "Plays the sounds from your Soundpad list, and its volume",
         "ru": "Проигрывает звуки из списка Soundpad и управляет его громкостью"
-      }
+      },
+      "cover": "plugin:ed.soundpad/assets/logo.webp"
     },
     {
       "id": "ed.vts",
@@ -41,8 +43,8 @@
       "version": "1.0.0",
       "apiVersion": 1,
       "file": "ed.vts.easydeck",
-      "sha256": "f5b41e8d2f71e6b0929f51355632dd02d013b8a76b140e92cb262779ab25aabe",
-      "bytes": 36806,
+      "sha256": "e727d6f762a700b503b7ddead364faf34d1a360f00570083089af11b86e3a4ba",
+      "bytes": 125068,
       "name": {
         "en": "VTube Studio",
         "ru": "VTube Studio"
@@ -50,7 +52,8 @@
       "description": {
         "en": "Hotkeys, expressions and models in VTube Studio",
         "ru": "Хоткеи, выражения и модели в VTube Studio"
-      }
+      },
+      "cover": "plugin:ed.vts/assets/logo.png"
     },
     {
       "id": "ed.yandex",
@@ -58,8 +61,8 @@
       "version": "1.0.0",
       "apiVersion": 1,
       "file": "ed.yandex.easydeck",
-      "sha256": "0d662307bd29d0ddd4c8d8845e38c6d98f981baccf0ca8358d686496fdd3a516",
-      "bytes": 65501,
+      "sha256": "fa508c94ae59b8bbef4afc913da60744e48428a57784bfaab3a503467f264e41",
+      "bytes": 111039,
       "name": {
         "en": "Yandex Station",
         "ru": "Яндекс Станция"
@@ -72,7 +75,7 @@
         "en": "EasyDeck",
         "ru": "EasyDeck"
       },
-      "cover": "plugin:ed.yandex/assets/cover.svg"
+      "cover": "plugin:ed.yandex/assets/maxresdefault.jpg"
     }
   ]
 }

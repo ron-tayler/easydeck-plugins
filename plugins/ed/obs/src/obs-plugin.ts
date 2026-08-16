@@ -87,6 +87,7 @@ const HOT_AT = 0.92;
 export const obsManifest: PluginManifest = {
   id: OBS_PLUGIN_ID,
   name: { en: 'OBS', ru: 'OBS' },
+  cover: "plugin:ed.obs/assets/logo.webp",
   description: {
     en: 'Scenes, streaming, recording and audio in OBS Studio',
     ru: 'Сцены, стрим, запись и звук в OBS Studio',

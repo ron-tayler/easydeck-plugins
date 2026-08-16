@@ -76,6 +76,7 @@ const LINES = [
 export const soundpadManifest: PluginManifest = {
   id: SOUNDPAD_PLUGIN_ID,
   name: { en: 'Soundpad', ru: 'Soundpad' },
+  cover: "plugin:ed.soundpad/assets/logo.webp",
   description: {
     en: 'Plays the sounds from your Soundpad list, and its volume',
     ru: 'Проигрывает звуки из списка Soundpad и управляет его громкостью',

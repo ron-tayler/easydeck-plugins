@@ -35,6 +35,7 @@ const PLUGIN_DEVELOPER = 'EasyDeck';
 export const vtsManifest: PluginManifest = {
   id: VTS_PLUGIN_ID,
   name: { en: 'VTube Studio', ru: 'VTube Studio' },
+  cover: "plugin:ed.vts/assets/logo.png",
   description: {
     en: 'Hotkeys, expressions and models in VTube Studio',
     ru: 'Хоткеи, выражения и модели в VTube Studio',
