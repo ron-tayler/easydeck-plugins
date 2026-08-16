@@ -11,6 +11,14 @@
   },
   "version": "1.0.0",
   "apiVersion": 1,
+  "author": {
+    "en": "EasyDeck",
+    "ru": "EasyDeck"
+  },
+  "cover": "plugin:ed.yandex/assets/cover.svg",
+  "screenshots": [
+    "plugin:ed.yandex/assets/cover.svg"
+  ],
   "settings": [
     {
       "name": "enabled",

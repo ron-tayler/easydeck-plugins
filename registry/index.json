@@ -1,14 +1,14 @@
 {
-  "generated": "2026-08-15T17:53:37.815Z",
+  "generated": "2026-08-16T10:53:15.885Z",
   "plugins": [
     {
       "id": "ed.obs",
       "author": "ed",
       "version": "1.0.0",
       "apiVersion": 1,
-      "path": "build/ed.obs",
-      "sha256": "2f19f7f310d1d42fc820d9441806cce2c4a0ec3eed105b298acd07a5cf53ccdb",
-      "bytes": 208363,
+      "file": "ed.obs.easydeck",
+      "sha256": "12ce2eda0bb49dc137e8259711068cdceb8014fa2266e2fff11ae79505075deb",
+      "bytes": 47268,
       "manifest": {
         "name": {
           "en": "OBS",
@@ -1124,9 +1124,9 @@
       "author": "ed",
       "version": "1.0.0",
       "apiVersion": 1,
-      "path": "build/ed.soundpad",
-      "sha256": "1c21af18e70b30295fc3bf3241d47b9945a011a9324f81384d5ddeb9b19691c8",
-      "bytes": 42386,
+      "file": "ed.soundpad.easydeck",
+      "sha256": "a307e06620a8c2289b68d7eadaab035c7d813a8faebeccaad60ef23510be02d2",
+      "bytes": 13891,
       "manifest": {
         "name": {
           "en": "Soundpad",
@@ -1698,9 +1698,9 @@
       "author": "ed",
       "version": "1.0.0",
       "apiVersion": 1,
-      "path": "build/ed.vts",
-      "sha256": "056476e0ef01dfb2813d1e10f003fd90d6356b45bf28b889af453e219f6357d3",
-      "bytes": 170680,
+      "file": "ed.vts.easydeck",
+      "sha256": "f5b41e8d2f71e6b0929f51355632dd02d013b8a76b140e92cb262779ab25aabe",
+      "bytes": 36806,
       "manifest": {
         "name": {
           "en": "VTube Studio",
@@ -2130,9 +2130,9 @@
       "author": "ed",
       "version": "1.0.0",
       "apiVersion": 1,
-      "path": "build/ed.yandex",
-      "sha256": "79c721566e3a4ade0d78f060eb3ffa6d33d8c0af21455f6cb44a62eee1ddfdd9",
-      "bytes": 306516,
+      "file": "ed.yandex.easydeck",
+      "sha256": "0d662307bd29d0ddd4c8d8845e38c6d98f981baccf0ca8358d686496fdd3a516",
+      "bytes": 65501,
       "manifest": {
         "name": {
           "en": "Yandex Station",
@@ -2144,6 +2144,14 @@
         },
         "version": "1.0.0",
         "apiVersion": 1,
+        "author": {
+          "en": "EasyDeck",
+          "ru": "EasyDeck"
+        },
+        "cover": "plugin:ed.yandex/assets/cover.svg",
+        "screenshots": [
+          "plugin:ed.yandex/assets/cover.svg"
+        ],
         "settings": [
           {
             "name": "enabled",

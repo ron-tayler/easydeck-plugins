@@ -19,10 +19,16 @@
  */
 import { createHash } from 'node:crypto';
 import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
-import { dirname, join, relative, resolve } from 'node:path';
+import { dirname, extname, join, relative, resolve } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 
 import esbuild from 'esbuild';
+
+// The host's own ZIP writer, from the checkout beside this one. Borrowed
+// rather than reimplemented so an archive this script makes and an archive
+// the app reads are the same format by construction — and so a bug in one is
+// a bug in both, found once.
+import { writeZip } from '../../EasyDeck/packages/core/dist/infrastructure/zip-writer.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const pluginsRoot = join(root, 'plugins');
@@ -31,6 +37,20 @@ const registryFile = join(root, 'registry', 'index.json');
 
 /** The folders the host reads as data; everything else is source. */
 const CARRIED = ['icons', 'locales', 'assets', 'natives'];
+
+/**
+ * What an installable plugin is called.
+ *
+ * The same extension a profile uses, on purpose: both are a zip with a
+ * manifest inside, both arrive by being dropped on the window, and asking
+ * somebody to remember which extension goes with which kind of thing is
+ * asking them to do the program's job. What is inside says which it is — a
+ * `plugin.json` is a plugin, a profile's document is a profile.
+ */
+const EXTENSION = '.easydeck';
+
+/** Compressing an already-compressed picture costs time and saves nothing. */
+const ALREADY_COMPRESSED = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.zip']);
 
 async function main() {
   await rm(buildRoot, { recursive: true, force: true });
@@ -41,7 +61,7 @@ async function main() {
       const folder = join(pluginsRoot, author, name);
       const entry = await buildOne(author, name, folder);
       entries.push(entry);
-      console.log(`built ${entry.id}@${entry.version} (${entry.bytes} bytes)`);
+      console.log(`built ${entry.file} — ${entry.version}, ${(entry.bytes / 1024).toFixed(0)} KB`);
     }
   }
 
@@ -117,26 +137,66 @@ async function buildOne(author, name, folder) {
     if (await exists(source)) await cp(source, join(out, carried), { recursive: true });
   }
 
-  // Renamed into place last, so a half-built folder never looks installable.
+  /*
+   * Renamed into place last, so a half-built folder never looks installable.
+   *
+   * The folder stays beside the archive rather than instead of it: copying one
+   * into the plugins folder is how a plugin is tried during development, and
+   * the archive is how it travels.
+   */
   const final = join(buildRoot, manifest.id);
   await cp(out, final, { recursive: true });
   await rm(out, { recursive: true, force: true });
 
-  const bytes = (await stat(join(final, 'main.mjs'))).size;
-  const sha256 = createHash('sha256')
-    .update(await readFile(join(final, 'main.mjs')))
-    .digest('hex');
+  const archive = `${manifest.id}${EXTENSION}`;
+  const bytes = writeZip(await pack(final));
+  await writeFile(join(buildRoot, archive), bytes);
 
   return {
     id: manifest.id,
     author,
     version: manifest.version,
     apiVersion: manifest.apiVersion,
-    path: relative(root, final).replaceAll('\\', '/'),
-    sha256,
-    bytes,
+    /** What to fetch. A file beside the index today, a URL when there is one. */
+    file: archive,
+    sha256: createHash('sha256').update(bytes).digest('hex'),
+    bytes: bytes.byteLength,
     manifest: storefront(manifest),
   };
+}
+
+/**
+ * Every file of a built plugin, as ZIP entries.
+ *
+ * Paths inside the archive are relative to the plugin's own folder and use
+ * forward slashes, so unpacking it *is* creating `plugins/<id>/`. Sorted, so
+ * building the same plugin twice makes the same archive — which is what lets
+ * a hash mean "this is that plugin" rather than "this was built at that
+ * moment".
+ */
+async function pack(folder, prefix = '') {
+  const files = [];
+  const entries = (await readdir(folder, { withFileTypes: true })).sort((one, other) =>
+    one.name.localeCompare(other.name),
+  );
+
+  for (const entry of entries) {
+    const path = join(folder, entry.name);
+    const name = prefix === '' ? entry.name : `${prefix}/${entry.name}`;
+
+    if (entry.isDirectory()) {
+      files.push(...(await pack(path, name)));
+      continue;
+    }
+
+    files.push({
+      name,
+      bytes: await readFile(path),
+      compress: !ALREADY_COMPRESSED.has(extname(entry.name).toLowerCase()),
+    });
+  }
+
+  return files;
 }
 
 /** The manifest as the store shows it — everything but the id repeated. */

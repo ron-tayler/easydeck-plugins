@@ -90,6 +90,17 @@ export const yandexManifest: PluginManifest = {
   },
   version: '1.0.0',
   apiVersion: PLUGIN_API_VERSION,
+  author: { en: 'EasyDeck', ru: 'EasyDeck' },
+
+  /*
+   * What the store shows: one picture in the list, several on the card.
+   *
+   * References rather than data, resolved out of this plugin's own archive —
+   * so the store's list stays a list of names and one small picture each,
+   * and the large ones are fetched only by whoever opens the card.
+   */
+  cover: 'plugin:ed.yandex/assets/cover.svg',
+  screenshots: ['plugin:ed.yandex/assets/cover.svg'],
 
   settings: [
     {
