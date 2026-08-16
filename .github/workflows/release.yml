@@ -55,14 +55,24 @@ jobs:
           cache: pnpm
           cache-dependency-path: easydeck-plugins/pnpm-lock.yaml
 
-      # Only what the plugins compile and pack against: the engine for types,
-      # core for the ZIP writer.
+      # What the plugins compile and pack against: the engine for types, core
+      # for the ZIP writer.
+      #
+      # `core...` rather than `core` — the trailing ellipsis is pnpm's "and
+      # everything it depends on", built in dependency order. Naming engine
+      # and core alone was enough on a machine where the rest had been built
+      # before and nowhere else: core's own build needs the declarations of
+      # device, compositor and renderer, and a fresh checkout has none.
+      #
+      # `ui` is then excluded because core and ui depend on each other — core
+      # serves ui's files, ui is typed against core — so "everything core
+      # depends on" includes a package that cannot be built until core is.
+      # Nothing here needs the window anyway.
       - name: Build the host packages
         working-directory: EasyDeck
         run: |
           pnpm install --frozen-lockfile
-          pnpm --filter @easydeck/engine build
-          pnpm --filter @easydeck/core build
+          pnpm --filter "@easydeck/core..." --filter "!@easydeck/ui" build
 
       - name: Build the plugins
         working-directory: easydeck-plugins
