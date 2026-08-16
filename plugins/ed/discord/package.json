@@ -1,0 +1,20 @@
+{
+  "name": "ed-discord",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mute, deafen, voice channels and who is talking",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test \"src/*.test.ts\""
+  },
+  "dependencies": {
+    "@easydeck/plugin-sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@easydeck/engine": "link:../../../../EasyDeck/packages/engine",
+    "@types/node": "^24.13.3",
+    "typescript": "~5.9.3"
+  }
+}

@@ -1,0 +1,614 @@
+{
+  "id": "ed.discord",
+  "main": "main.mjs",
+  "name": {
+    "en": "Discord",
+    "ru": "Discord"
+  },
+  "author": {
+    "en": "EasyDeck",
+    "ru": "EasyDeck"
+  },
+  "description": {
+    "en": "Mute, deafen, voice channels and who is talking",
+    "ru": "Микрофон, наушники, голосовые каналы и кто говорит"
+  },
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "settings": [
+    {
+      "name": "enabled",
+      "type": "boolean",
+      "label": {
+        "en": "Connect to Discord",
+        "ru": "Подключаться к Discord"
+      },
+      "default": false,
+      "required": false
+    },
+    {
+      "name": "clientId",
+      "type": "string",
+      "required": false,
+      "label": {
+        "en": "Application ID",
+        "ru": "ID приложения"
+      },
+      "description": {
+        "en": "From discord.com/developers — make an application, and add http://localhost to its OAuth2 redirects. Discord only allows RPC for an app's own owner, which is why this is yours rather than ours",
+        "ru": "С discord.com/developers — создайте приложение и добавьте http://localhost в его OAuth2-редиректы. Discord пускает в RPC только владельца приложения, поэтому оно ваше, а не наше"
+      }
+    },
+    {
+      "name": "clientSecret",
+      "type": "string",
+      "secret": true,
+      "required": false,
+      "label": {
+        "en": "Client secret",
+        "ru": "Client secret"
+      },
+      "description": {
+        "en": "From the OAuth2 page of the same application",
+        "ru": "Со страницы OAuth2 того же приложения"
+      }
+    },
+    {
+      "name": "token",
+      "type": "string",
+      "secret": true,
+      "internal": true,
+      "required": false,
+      "label": {
+        "en": "Access token",
+        "ru": "Токен доступа"
+      }
+    }
+  ],
+  "commands": [
+    {
+      "name": "authorise",
+      "label": {
+        "en": "Authorise",
+        "ru": "Авторизовать"
+      },
+      "icon": "link",
+      "description": {
+        "en": "Discord will ask you to allow the application — switch to it and press Authorize",
+        "ru": "Discord попросит разрешить приложение — переключитесь в него и нажмите «Авторизовать»"
+      }
+    },
+    {
+      "name": "reconnect",
+      "label": {
+        "en": "Reconnect",
+        "ru": "Переподключиться"
+      },
+      "icon": "link"
+    }
+  ],
+  "variables": [
+    {
+      "name": "discord.connected",
+      "type": "boolean",
+      "label": {
+        "en": "Discord connected",
+        "ru": "Discord подключён"
+      },
+      "initial": false
+    },
+    {
+      "name": "discord.muted",
+      "type": "boolean",
+      "label": {
+        "en": "Microphone muted",
+        "ru": "Микрофон выключен"
+      },
+      "initial": false
+    },
+    {
+      "name": "discord.deafened",
+      "type": "boolean",
+      "label": {
+        "en": "Deafened",
+        "ru": "Звук выключен"
+      },
+      "initial": false
+    },
+    {
+      "name": "discord.input-volume",
+      "type": "number",
+      "label": {
+        "en": "Microphone volume, %",
+        "ru": "Громкость микрофона, %"
+      }
+    },
+    {
+      "name": "discord.output-volume",
+      "type": "number",
+      "label": {
+        "en": "Output volume, %",
+        "ru": "Громкость звука, %"
+      }
+    },
+    {
+      "name": "discord.channel",
+      "type": "string",
+      "label": {
+        "en": "Voice channel",
+        "ru": "Голосовой канал"
+      },
+      "description": {
+        "en": "Empty when not in one, which is also how a key knows to say \"join\"",
+        "ru": "Пусто, когда вы не в канале — по этому клавиша и понимает, что предлагать вход"
+      }
+    },
+    {
+      "name": "discord.members",
+      "type": "number",
+      "label": {
+        "en": "People in the channel",
+        "ru": "Человек в канале"
+      },
+      "initial": 0
+    },
+    {
+      "name": "discord.speaking",
+      "type": "string",
+      "label": {
+        "en": "Who is talking",
+        "ru": "Кто говорит"
+      },
+      "description": {
+        "en": "The names of everyone talking right now, or empty when the channel is quiet",
+        "ru": "Имена всех, кто говорит сейчас; пусто, когда в канале тихо"
+      }
+    },
+    {
+      "name": "discord.talking",
+      "type": "boolean",
+      "label": {
+        "en": "You are talking",
+        "ru": "Вы говорите"
+      },
+      "initial": false
+    }
+  ],
+  "actions": [
+    {
+      "type": "ed.discord.mute",
+      "icon": "mute",
+      "label": {
+        "en": "Microphone",
+        "ru": "Микрофон"
+      },
+      "params": [
+        {
+          "name": "mode",
+          "type": "select",
+          "default": "toggle",
+          "label": {
+            "en": "What to do",
+            "ru": "Что сделать"
+          },
+          "options": [
+            {
+              "value": "toggle",
+              "label": {
+                "en": "Toggle",
+                "ru": "Переключить"
+              }
+            },
+            {
+              "value": "on",
+              "label": {
+                "en": "Mute",
+                "ru": "Выключить"
+              }
+            },
+            {
+              "value": "off",
+              "label": {
+                "en": "Unmute",
+                "ru": "Включить"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "ed.discord.deafen",
+      "icon": "speaker",
+      "label": {
+        "en": "Deafen",
+        "ru": "Оглушить"
+      },
+      "description": {
+        "en": "Turns your own sound off. Discord mutes the microphone with it, and this reports that",
+        "ru": "Выключает звук у вас. Discord заодно выключает микрофон, и плагин это показывает"
+      },
+      "params": [
+        {
+          "name": "mode",
+          "type": "select",
+          "default": "toggle",
+          "label": {
+            "en": "What to do",
+            "ru": "Что сделать"
+          },
+          "options": [
+            {
+              "value": "toggle",
+              "label": {
+                "en": "Toggle",
+                "ru": "Переключить"
+              }
+            },
+            {
+              "value": "on",
+              "label": {
+                "en": "Deafen",
+                "ru": "Оглушить"
+              }
+            },
+            {
+              "value": "off",
+              "label": {
+                "en": "Undeafen",
+                "ru": "Вернуть звук"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "ed.discord.volume",
+      "icon": "increment",
+      "label": {
+        "en": "Volume",
+        "ru": "Громкость"
+      },
+      "params": [
+        {
+          "name": "which",
+          "type": "select",
+          "default": "input",
+          "label": {
+            "en": "Which",
+            "ru": "Чего"
+          },
+          "options": [
+            {
+              "value": "input",
+              "label": {
+                "en": "Microphone",
+                "ru": "Микрофона"
+              }
+            },
+            {
+              "value": "output",
+              "label": {
+                "en": "Sound",
+                "ru": "Звука"
+              }
+            }
+          ]
+        },
+        {
+          "name": "mode",
+          "type": "select",
+          "default": "up",
+          "label": {
+            "en": "What to do",
+            "ru": "Что сделать"
+          },
+          "options": [
+            {
+              "value": "up",
+              "label": {
+                "en": "Louder",
+                "ru": "Громче"
+              }
+            },
+            {
+              "value": "down",
+              "label": {
+                "en": "Quieter",
+                "ru": "Тише"
+              }
+            },
+            {
+              "value": "set",
+              "label": {
+                "en": "Set to",
+                "ru": "Задать"
+              }
+            }
+          ]
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "default": 10,
+          "min": 0,
+          "max": 200,
+          "label": {
+            "en": "Per cent",
+            "ru": "Проценты"
+          },
+          "description": {
+            "en": "Discord allows up to 200 for output, and 100 for the microphone",
+            "ru": "Discord разрешает до 200 для звука и до 100 для микрофона"
+          }
+        }
+      ]
+    },
+    {
+      "type": "ed.discord.join",
+      "icon": "app",
+      "label": {
+        "en": "Join a voice channel",
+        "ru": "Войти в голосовой канал"
+      },
+      "description": {
+        "en": "Pick a channel you can see. Leaving is the same action with nothing chosen",
+        "ru": "Выберите канал из доступных. Выход — это же действие с пустым выбором"
+      },
+      "params": [
+        {
+          "name": "channel",
+          "type": "select",
+          "required": false,
+          "label": {
+            "en": "Channel",
+            "ru": "Канал"
+          },
+          "optionsFrom": "channels",
+          "emptyNote": {
+            "en": "No voice channels — authorise first, and be in a server that has some",
+            "ru": "Голосовых каналов нет — сначала авторизуйтесь и будьте на сервере, где они есть"
+          },
+          "description": {
+            "en": "Empty means leave whichever channel you are in",
+            "ru": "Пусто — выйти из того канала, где вы сейчас"
+          }
+        }
+      ]
+    },
+    {
+      "type": "ed.discord.user-volume",
+      "icon": "variable",
+      "label": {
+        "en": "Someone's volume",
+        "ru": "Громкость собеседника"
+      },
+      "description": {
+        "en": "Turns one person up, down, or off — for you only",
+        "ru": "Делает одного человека громче, тише или беззвучным — только у вас"
+      },
+      "params": [
+        {
+          "name": "user",
+          "type": "select",
+          "label": {
+            "en": "Who",
+            "ru": "Кто"
+          },
+          "optionsFrom": "members",
+          "emptyNote": {
+            "en": "Nobody to list — this offers the people in your channel right now",
+            "ru": "Некого перечислять — здесь те, кто сейчас в вашем канале"
+          }
+        },
+        {
+          "name": "mode",
+          "type": "select",
+          "default": "set",
+          "label": {
+            "en": "What to do",
+            "ru": "Что сделать"
+          },
+          "options": [
+            {
+              "value": "set",
+              "label": {
+                "en": "Set volume",
+                "ru": "Задать громкость"
+              }
+            },
+            {
+              "value": "mute",
+              "label": {
+                "en": "Mute them",
+                "ru": "Заглушить"
+              }
+            },
+            {
+              "value": "unmute",
+              "label": {
+                "en": "Unmute them",
+                "ru": "Вернуть звук"
+              }
+            }
+          ]
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "default": 100,
+          "min": 0,
+          "max": 200,
+          "required": false,
+          "label": {
+            "en": "Per cent",
+            "ru": "Проценты"
+          }
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "mute",
+      "label": {
+        "en": "Microphone",
+        "ru": "Микрофон"
+      },
+      "button": {
+        "stateFrom": "discord.muted",
+        "states": [
+          {
+            "id": "live",
+            "when": false,
+            "visual": {
+              "background": "#2f6f4f",
+              "label": {
+                "text": "Микрофон",
+                "fontSize": 13,
+                "position": "center"
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.discord.mute",
+                  "params": {
+                    "mode": "toggle"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "muted",
+            "when": true,
+            "visual": {
+              "background": "#6f3535",
+              "label": {
+                "text": "Выключен",
+                "fontSize": 13,
+                "position": "center"
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.discord.mute",
+                  "params": {
+                    "mode": "toggle"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "deafen",
+      "label": {
+        "en": "Deafen",
+        "ru": "Оглушить"
+      },
+      "button": {
+        "stateFrom": "discord.deafened",
+        "states": [
+          {
+            "id": "hearing",
+            "when": false,
+            "visual": {
+              "background": "#22303c",
+              "label": {
+                "text": "Звук",
+                "fontSize": 13,
+                "position": "center"
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.discord.deafen",
+                  "params": {
+                    "mode": "toggle"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "id": "deafened",
+            "when": true,
+            "visual": {
+              "background": "#6f3535",
+              "label": {
+                "text": "Оглушён",
+                "fontSize": 13,
+                "position": "center"
+              }
+            },
+            "actions": {
+              "press": [
+                {
+                  "type": "ed.discord.deafen",
+                  "params": {
+                    "mode": "toggle"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "channel",
+      "label": {
+        "en": "Channel and who is in it",
+        "ru": "Канал и кто в нём"
+      },
+      "description": {
+        "en": "The channel you are in and how many people are there",
+        "ru": "Канал, в котором вы сидите, и сколько в нём человек"
+      },
+      "button": {
+        "states": [
+          {
+            "id": "default",
+            "visual": {
+              "background": "#1a1c22",
+              "label": {
+                "text": "{{discord.channel}}\n{{discord.members}}",
+                "fontSize": 12,
+                "position": "center"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "talking",
+      "label": {
+        "en": "Who is talking",
+        "ru": "Кто говорит"
+      },
+      "button": {
+        "states": [
+          {
+            "id": "default",
+            "visual": {
+              "background": "#1a1c22",
+              "label": {
+                "text": "{{discord.speaking}}",
+                "fontSize": 11,
+                "position": "center"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
