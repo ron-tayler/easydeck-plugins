@@ -23,6 +23,53 @@ const CHANNEL: FakeChannel = {
   ],
 };
 
+/**
+ * A room with more people in it than a key has tiles for.
+ *
+ * Each with an avatar hash of their own, which the fake CDN below answers
+ * with — so a face in the picture can be told from the face beside it.
+ */
+const CROWD: FakeChannel = {
+  id: 'c-voice',
+  name: 'Общий',
+  voice_states: ['me', 'a1', 'a2', 'a3', 'a4', 'a5'].map((id) => ({
+    user: { id, username: id, avatar: id },
+  })),
+};
+
+/**
+ * Discord's picture server, as a test may have one.
+ *
+ * Answers with the avatar hash as the bytes of the picture, which is not a
+ * PNG and does not need to be: nothing here decodes one, and it means the
+ * face drawn into a tile can be read back and named.
+ */
+function cdn(): typeof fetch {
+  return (async (input: string | URL | Request) => {
+    const address = String(input);
+    const hash = /avatars\/[^/]+\/([^.]+)\.png/.exec(address)?.[1] ?? 'default';
+    return new Response(Buffer.from(hash, 'utf8'), { headers: { 'content-type': 'image/png' } });
+  }) as unknown as typeof fetch;
+}
+
+/** The markup of a frame, whichever way the runtime wrapped it. */
+function svgOf(frame: { source: string } | undefined): string {
+  if (!frame) return '';
+  if (!frame.source.startsWith('data:')) return frame.source;
+
+  const [head, body = ''] = frame.source.split(',');
+  return head?.includes('base64')
+    ? Buffer.from(body, 'base64').toString('utf8')
+    : decodeURIComponent(body);
+}
+
+/** Who is in the picture, in the order their tiles were drawn. */
+function facesIn(svg: string): string[] {
+  return [...svg.matchAll(/href="data:[^;]+;base64,([^"]+)"/g)].map((found) =>
+    Buffer.from(found[1] ?? '', 'base64').toString('utf8'),
+  );
+}
+
 function context(variables: VariableStore): ActionContext {
   return {
     variables,
@@ -75,7 +122,9 @@ async function bench(options: BenchOptions = {}) {
 
   await installForTest(
     discordManifest,
-    activateWith({ path, retryDelaysMs: [50, 100] }),
+    // A fetcher of our own, or drawing a face would reach Discord's CDN from
+    // a test.
+    activateWith({ path, retryDelaysMs: [50, 100], fetcher: cdn() }),
     registry,
     runtime,
   );
@@ -99,6 +148,26 @@ async function bench(options: BenchOptions = {}) {
     dispose,
     run: (type: string, params: Record<string, unknown> = {}) =>
       registry.run({ type, params }, context(variables)),
+    /** The widget, drawn for one key, as the faces that ended up in it. */
+    async faces(params: Record<string, unknown> = {}): Promise<string[]> {
+      const frame = await runtime.drawSurface({
+        type: 'ed.discord.speakers',
+        params,
+        cols: 1,
+        rows: 1,
+        buttons: ['b'],
+      });
+      return facesIn(svgOf(frame));
+    },
+    async frame(params: Record<string, unknown> = {}) {
+      return runtime.drawSurface({
+        type: 'ed.discord.speakers',
+        params,
+        cols: 1,
+        rows: 1,
+        buttons: ['b'],
+      });
+    },
     /** What a key asked for, with the plumbing left out. */
     sent: () =>
       discord.commands.filter(
@@ -301,6 +370,107 @@ describe('the Discord plugin', () => {
   });
 });
 
+describe('the faces of whoever is talking', () => {
+  it('shows nothing at all while the room is quiet', async () => {
+    const bed = await bench({ token: TOKEN, channel: CROWD });
+    await bed.until('the room', () => bed.variables.get('ed.discord.members') === 6);
+
+    // Not an empty picture: no picture, so the key shows whatever it was
+    // given — its own background and label.
+    assert.equal(await bed.frame(), undefined);
+
+    await bed.dispose();
+  });
+
+  it('gives four people four tiles, and the newest takes the stalest', async () => {
+    const bed = await bench({ token: TOKEN, channel: CROWD });
+    await bed.until('the room', () => bed.variables.get('ed.discord.members') === 6);
+
+    for (const id of ['a1', 'a2', 'a3', 'a4']) bed.discord.emit('SPEAKING_START', { user_id: id });
+    await bed.until('four faces', async () => (await bed.faces()).length === 4);
+    assert.deepEqual(await bed.faces(), ['a1', 'a2', 'a3', 'a4']);
+
+    /*
+     * A fifth voice, and only four tiles.
+     *
+     * The newcomer takes the tile of whoever has been going longest, and takes
+     * it *in place*: nobody else moves. A face that slid across the key every
+     * time somebody else spoke would be unreadable in exactly the situation
+     * this widget exists for.
+     */
+    bed.discord.emit('SPEAKING_START', { user_id: 'a5' });
+    await bed.until('the fifth voice', async () => (await bed.faces()).includes('a5'));
+    assert.deepEqual(await bed.faces(), ['a5', 'a2', 'a3', 'a4']);
+
+    // And somebody dropped that way was only off screen, not forgotten: a1
+    // never stopped talking, and takes the first tile to come free.
+    bed.discord.emit('SPEAKING_STOP', { user_id: 'a2' });
+    await bed.until('the tile to free up', async () => !(await bed.faces()).includes('a2'));
+    assert.deepEqual(await bed.faces(), ['a5', 'a3', 'a4', 'a1']);
+
+    await bed.dispose();
+  });
+
+  it('holds the last faces faded, for a key that asked not to blink', async () => {
+    const bed = await bench({ token: TOKEN, channel: CROWD });
+    await bed.until('the room', () => bed.variables.get('ed.discord.members') === 6);
+
+    bed.discord.emit('SPEAKING_START', { user_id: 'a1' });
+    await bed.until('the face', async () => (await bed.faces({ quiet: 'last' })).length === 1);
+
+    bed.discord.emit('SPEAKING_STOP', { user_id: 'a1' });
+    await bed.until('the room to go quiet', () => bed.variables.get('ed.discord.speaking') === '');
+
+    // A pause between two sentences is about a second, and a key that goes
+    // blank for it does not read as quiet — it reads as broken.
+    const svg = svgOf(await bed.frame({ quiet: 'last' }));
+    assert.deepEqual(facesIn(svg), ['a1']);
+    assert.match(svg, /<g opacity="0\.35">/);
+
+    // The other way round, the same moment is nothing at all.
+    assert.equal(await bed.frame({ quiet: 'nothing' }), undefined);
+
+    await bed.dispose();
+  });
+
+  it('forgets the room when you leave it', async () => {
+    const bed = await bench({ token: TOKEN, channel: CROWD });
+    await bed.until('the room', () => bed.variables.get('ed.discord.members') === 6);
+
+    bed.discord.emit('SPEAKING_START', { user_id: 'a1' });
+    await bed.until('the face', async () => (await bed.faces()).length === 1);
+
+    // Leaving mid-sentence is normal, and Discord sends no stop for it. A key
+    // still showing that face afterwards would be showing a different call.
+    bed.discord.channel = undefined as unknown as FakeChannel;
+    bed.discord.emit('VOICE_CHANNEL_SELECT', { channel_id: null });
+    await bed.until('the picture to empty', async () => (await bed.faces({ quiet: 'last' })).length === 0);
+
+    await bed.dispose();
+  });
+
+  it('names the picture by what is in it, so a still is written once', async () => {
+    const bed = await bench({ token: TOKEN, channel: CROWD });
+    await bed.until('the room', () => bed.variables.get('ed.discord.members') === 6);
+
+    bed.discord.emit('SPEAKING_START', { user_id: 'a1' });
+    await bed.until('the face', async () => (await bed.faces()).length === 1);
+
+    // Two repaints of an unchanged call are one picture: the panel compares
+    // these and skips the write. On a quiet call that is minutes of silence.
+    const first = await bed.frame();
+    const again = await bed.frame();
+    assert.equal(typeof first?.id, 'string');
+    assert.equal(first?.id, again?.id);
+
+    bed.discord.emit('SPEAKING_START', { user_id: 'a2' });
+    await bed.until('the second face', async () => (await bed.faces()).length === 2);
+    assert.notEqual((await bed.frame())?.id, first?.id);
+
+    await bed.dispose();
+  });
+});
+
 describe('counting heads in a channel you are not in', () => {
   it('answers for the channel named, and for the one you are in', async () => {
     const bed = await bench({ token: TOKEN, channel: CHANNEL });
@@ -322,6 +492,51 @@ describe('counting heads in a channel you are not in', () => {
 
     // And the bare name still means the room you are standing in.
     assert.equal(bed.variables.get('ed.discord.members'), 2);
+
+    await bed.dispose();
+  });
+
+  it('listens to that channel rather than only polling it', async () => {
+    const bed = await bench({ token: TOKEN, channel: CHANNEL });
+    bed.discord.rooms['c-other'] = { voice_states: [{}] };
+    await bed.until('the connection', () => bed.variables.get('ed.discord.connected') === true);
+
+    bed.runtime.setWatched(['ed.discord.members(c-other)']);
+    await bed.until('the other room', () => bed.variables.get('ed.discord.members(c-other)') === 1);
+
+    // Comings and goings, and nothing else. Speech in a room you are not in is
+    // a flood of events answering a question nobody asked.
+    assert.deepEqual(
+      bed.discord.subscriptions.filter((one) => one.channel === 'c-other'),
+      [
+        { cmd: 'SUBSCRIBE', evt: 'VOICE_STATE_CREATE', channel: 'c-other' },
+        { cmd: 'SUBSCRIBE', evt: 'VOICE_STATE_DELETE', channel: 'c-other' },
+      ],
+    );
+
+    /*
+     * A friend joins a channel next door.
+     *
+     * Regression: this only moved when the fifteen-second poll came round,
+     * because the channel was polled and never listened to — so the number sat
+     * still while somebody watched it. The wait below is far shorter than that
+     * poll, which is what makes this a test of the subscription.
+     */
+    bed.discord.rooms['c-other'] = { voice_states: [{}, {}] };
+    bed.discord.emit('VOICE_STATE_CREATE', { user: { id: 'friend' } });
+    await bed.until(
+      'the headcount to follow the event',
+      () => bed.variables.get('ed.discord.members(c-other)') === 2,
+      2000,
+    );
+
+    // And it is let go of when the key showing it goes away.
+    bed.runtime.setWatched([]);
+    await bed.until('the subscription to be dropped', () =>
+      bed.discord.subscriptions.some(
+        (one) => one.cmd === 'UNSUBSCRIBE' && one.channel === 'c-other',
+      ),
+    );
 
     await bed.dispose();
   });

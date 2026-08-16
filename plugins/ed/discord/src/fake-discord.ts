@@ -37,7 +37,14 @@ export interface FakeChannel {
   readonly id: string;
   readonly name: string;
   readonly voice_states: {
-    readonly user: { id: string; username?: string; global_name?: string };
+    readonly user: {
+      id: string;
+      username?: string;
+      global_name?: string;
+      /** The hash Discord gives out instead of a picture; absent is normal. */
+      avatar?: string | null;
+      discriminator?: string;
+    };
     readonly nick?: string;
   }[];
 }
@@ -52,6 +59,15 @@ export class FakeDiscord {
 
   /** Every command received, in order, for a test to assert against. */
   readonly commands: { cmd: string; args: Record<string, unknown> }[] = [];
+
+  /**
+   * And every subscription, kept apart from the commands.
+   *
+   * Apart because they are bookkeeping rather than requests: a test asserting
+   * "the last thing this key sent" means the last *command*, and would have to
+   * count subscriptions it does not care about otherwise.
+   */
+  readonly subscriptions: { cmd: string; evt: string; channel?: string }[] = [];
 
   voice: VoiceSettings;
   channel?: FakeChannel;
@@ -126,7 +142,16 @@ export class FakeDiscord {
     const nonce = String(message['nonce'] ?? '');
     const args = (message['args'] as Record<string, unknown> | undefined) ?? {};
 
-    if (cmd !== 'SUBSCRIBE' && cmd !== 'UNSUBSCRIBE') this.commands.push({ cmd, args });
+    if (cmd === 'SUBSCRIBE' || cmd === 'UNSUBSCRIBE') {
+      const channel = args['channel_id'];
+      this.subscriptions.push({
+        cmd,
+        evt: String(message['evt'] ?? ''),
+        ...(typeof channel === 'string' ? { channel } : {}),
+      });
+    } else {
+      this.commands.push({ cmd, args });
+    }
 
     const refusal = this.options.refuse?.[cmd];
     if (refusal) {

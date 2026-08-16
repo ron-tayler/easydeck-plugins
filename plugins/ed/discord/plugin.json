@@ -14,7 +14,7 @@
     "en": "Mute, deafen, voice channels and who is talking",
     "ru": "Микрофон, наушники, голосовые каналы и кто говорит"
   },
-  "version": "1.2.0",
+  "version": "1.3.0",
   "apiVersion": 1,
   "settings": [
     {
@@ -191,6 +191,64 @@
         "ru": "Вы говорите"
       },
       "initial": false
+    }
+  ],
+  "surfaces": [
+    {
+      "type": "ed.discord.speakers",
+      "label": {
+        "en": "Who is talking",
+        "ru": "Кто говорит"
+      },
+      "description": {
+        "en": "The avatars of everyone talking in your channel, up to four — the newest first",
+        "ru": "Аватарки тех, кто говорит в вашем канале, до четырёх — новый говорящий первым"
+      },
+      "icon": "speaker",
+      "params": [
+        {
+          "name": "quiet",
+          "type": "select",
+          "default": "nothing",
+          "label": {
+            "en": "When nobody is talking",
+            "ru": "Когда все молчат"
+          },
+          "description": {
+            "en": "A pause between two sentences is a second long, and a key that blanks for it flickers",
+            "ru": "Пауза между фразами — секунда, и клавиша, которая на ней гаснет, мерцает"
+          },
+          "options": [
+            {
+              "value": "nothing",
+              "label": {
+                "en": "Show nothing",
+                "ru": "Ничего не показывать"
+              }
+            },
+            {
+              "value": "last",
+              "label": {
+                "en": "Keep the last faces, faded",
+                "ru": "Оставить последних, приглушённо"
+              }
+            }
+          ]
+        },
+        {
+          "name": "background",
+          "type": "color",
+          "required": false,
+          "label": {
+            "en": "Background",
+            "ru": "Фон"
+          },
+          "description": {
+            "en": "Behind the faces. Empty lets the key's own background show through",
+            "ru": "За лицами. Пусто — виден собственный фон клавиши"
+          }
+        }
+      ]
     }
   ],
   "actions": [
@@ -610,8 +668,8 @@
     {
       "name": "talking",
       "label": {
-        "en": "Who is talking",
-        "ru": "Кто говорит"
+        "en": "Who is talking, by name",
+        "ru": "Кто говорит, именами"
       },
       "button": {
         "states": [
@@ -623,6 +681,33 @@
                 "text": "{{ed.discord.speaking}}",
                 "fontSize": 11,
                 "position": "center"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "faces",
+      "label": {
+        "en": "Who is talking, by face",
+        "ru": "Кто говорит, лицами"
+      },
+      "description": {
+        "en": "The avatars of whoever is speaking, split between them",
+        "ru": "Аватарки говорящих, поделённые между ними"
+      },
+      "button": {
+        "states": [
+          {
+            "id": "default",
+            "visual": {
+              "background": "#1a1c22",
+              "surface": {
+                "type": "ed.discord.speakers",
+                "params": {
+                  "quiet": "last"
+                }
               }
             }
           }

@@ -12,10 +12,15 @@ import type {
   PluginActivation,
   PluginHost,
   PluginManifest,
+  SurfaceFrame,
+  SurfaceRequest,
 } from '@easydeck/plugin-sdk';
 
+import { Avatars, avatarAddress } from './avatars.js';
 import { authenticate, authorize, REDIRECT_URI, SCOPES } from './discord-auth.js';
 import { DiscordIpc } from './discord-ipc.js';
+import { drawSpeakers, MAX_FACES } from './speakers-surface.js';
+import type { Face } from './speakers-surface.js';
 
 /**
  * Discord, as a deck sees it.
@@ -59,6 +64,31 @@ const POLL_INTERVAL_MS = 15_000;
  */
 const NO_CHANNEL = '';
 
+/**
+ * What is worth hearing about the channel you are in.
+ *
+ * Speech as well as comings and goings, because this is the room the "who is
+ * talking" key is about.
+ */
+const ROOM_EVENTS = ['SPEAKING_START', 'SPEAKING_STOP', 'VOICE_STATE_CREATE', 'VOICE_STATE_DELETE'];
+
+/**
+ * And what is worth hearing about a channel somebody is only counting.
+ *
+ * Coming and going, and nothing else. Speech in a room you are not in is a
+ * flood of events to answer a question nobody asked, and `VOICE_STATE_UPDATE`
+ * fires every time anybody mutes themselves without changing the number.
+ */
+const COUNT_EVENTS = ['VOICE_STATE_CREATE', 'VOICE_STATE_DELETE'];
+
+/**
+ * How solid the faces are once the room has gone quiet.
+ *
+ * Enough to still recognise who was talking, little enough that nobody reads
+ * it as somebody talking now.
+ */
+const FADED = 0.35;
+
 export const discordManifest: PluginManifest = {
   id: DISCORD_PLUGIN_ID,
   name: { en: 'Discord', ru: 'Discord' },
@@ -68,7 +98,7 @@ export const discordManifest: PluginManifest = {
     en: 'Mute, deafen, voice channels and who is talking',
     ru: 'Микрофон, наушники, голосовые каналы и кто говорит',
   },
-  version: '1.2.0',
+  version: '1.3.0',
   apiVersion: PLUGIN_API_VERSION,
 
   settings: [
@@ -235,6 +265,52 @@ export const discordManifest: PluginManifest = {
       type: 'boolean',
       label: { en: 'You are talking', ru: 'Вы говорите' },
       initial: false,
+    },
+  ],
+
+  surfaces: [
+    {
+      /*
+       * The faces of whoever is making the noise.
+       *
+       * `ed.discord.speaking` answers the same question in names, and on a key
+       * that is 112 pixels across, three names at once is three lines of five
+       * point text. A face is recognised at a glance and from across a desk,
+       * which is the distance a deck is looked at from.
+       */
+      type: 'ed.discord.speakers',
+      label: { en: 'Who is talking', ru: 'Кто говорит' },
+      description: {
+        en: 'The avatars of everyone talking in your channel, up to four — the newest first',
+        ru: 'Аватарки тех, кто говорит в вашем канале, до четырёх — новый говорящий первым',
+      },
+      icon: 'speaker',
+      params: [
+        {
+          name: 'quiet',
+          type: 'select',
+          default: 'nothing',
+          label: { en: 'When nobody is talking', ru: 'Когда все молчат' },
+          description: {
+            en: 'A pause between two sentences is a second long, and a key that blanks for it flickers',
+            ru: 'Пауза между фразами — секунда, и клавиша, которая на ней гаснет, мерцает',
+          },
+          options: [
+            { value: 'nothing', label: { en: 'Show nothing', ru: 'Ничего не показывать' } },
+            { value: 'last', label: { en: 'Keep the last faces, faded', ru: 'Оставить последних, приглушённо' } },
+          ],
+        },
+        {
+          name: 'background',
+          type: 'color',
+          required: false,
+          label: { en: 'Background', ru: 'Фон' },
+          description: {
+            en: "Behind the faces. Empty lets the key's own background show through",
+            ru: 'За лицами. Пусто — виден собственный фон клавиши',
+          },
+        },
+      ],
     },
   ],
 
@@ -456,7 +532,7 @@ export const discordManifest: PluginManifest = {
     },
     {
       name: 'talking',
-      label: { en: 'Who is talking', ru: 'Кто говорит' },
+      label: { en: 'Who is talking, by name', ru: 'Кто говорит, именами' },
       button: {
         states: [
           {
@@ -469,6 +545,26 @@ export const discordManifest: PluginManifest = {
         ],
       },
     },
+    {
+      name: 'faces',
+      label: { en: 'Who is talking, by face', ru: 'Кто говорит, лицами' },
+      description: {
+        en: 'The avatars of whoever is speaking, split between them',
+        ru: 'Аватарки говорящих, поделённые между ними',
+      },
+      button: {
+        states: [
+          {
+            id: 'default',
+            visual: {
+              background: '#1a1c22',
+              // Faded rather than blank between two sentences: see the widget.
+              surface: { type: 'ed.discord.speakers', params: { quiet: 'last' } },
+            },
+          },
+        ],
+      },
+    },
   ],
 };
 
@@ -476,13 +572,15 @@ export const discordManifest: PluginManifest = {
 interface Member {
   readonly id: string;
   readonly name: string;
+  /** Where their avatar lives, built once when the room is read. */
+  readonly address: string;
 }
 
 export interface DiscordPluginOptions {
   readonly retryDelaysMs?: readonly number[];
   /** Overridden by tests, which listen on a socket of their own. */
   readonly path?: string;
-  /** Overridden by tests, which must not call Discord's token endpoint. */
+  /** Overridden by tests, which must not call Discord's token endpoint — or a CDN. */
   readonly fetcher?: typeof fetch;
 }
 
@@ -497,6 +595,21 @@ export class DiscordPlugin implements Plugin {
   private members: Member[] = [];
   /** Ids talking right now. A set because two people talk at once. */
   private readonly talking = new Set<string>();
+  /**
+   * Who the widget is showing, in the order their tiles are drawn.
+   *
+   * Kept apart from `talking` because a tile that moves is a tile nobody can
+   * follow: a face keeps its place for as long as its owner keeps talking, and
+   * recency decides only who *gets* a place when there are more than four
+   * people going at once.
+   */
+  private shown: string[] = [];
+  /** The last face on screen, for a key that fades rather than blanks. */
+  private lingering: string[] = [];
+  /** When each started talking, so the widget can drop the stalest of them. */
+  private readonly started = new Map<string, number>();
+  private turn = 0;
+  private readonly avatars: Avatars;
   /** Channels offered by the picker, gathered from the servers we can see. */
   private channels: ParamOption[] = [];
   /**
@@ -507,11 +620,28 @@ export class DiscordPlugin implements Plugin {
    * mean polling every voice channel of every server this person is in.
    */
   private watching: readonly string[] = [];
+  /**
+   * What is subscribed where, so a change is a difference rather than a reset.
+   *
+   * Discord's subscriptions are per channel and per event, and there is no way
+   * to ask it what one already has — so this is the only record of it, and it
+   * is emptied whenever the connection is remade.
+   */
+  private subscribed = new Map<string, readonly string[]>();
 
   /** True while this plugin is writing a setting itself; see `connect`. */
   private storingToken = false;
 
-  constructor(private readonly options: DiscordPluginOptions = {}) {}
+  constructor(private readonly options: DiscordPluginOptions = {}) {
+    this.avatars = new Avatars({
+      ...(options.fetcher ? { fetcher: options.fetcher } : {}),
+      // A face arriving is the one change nothing else would notice: no
+      // variable moved, so without this the key waits for somebody to speak
+      // again before it shows the person who just did.
+      onArrived: () => this.host?.redraw(),
+      log: (message) => this.host?.log('warn', message),
+    });
+  }
 
   start(host: PluginHost): void {
     this.host = host;
@@ -539,9 +669,12 @@ export class DiscordPlugin implements Plugin {
       ];
 
       // Read at once rather than at the next tick: a key added while Discord
-      // is running should start showing something immediately.
-      if (this.ipc?.connected) void this.readWatched();
+      // is running should start showing something immediately — and listened
+      // to, or the number would only move on the fifteen-second poll.
+      if (this.ipc?.connected) void this.reconcile().then(() => this.readWatched());
     });
+
+    host.provideSurface('ed.discord.speakers', async (request) => this.speakers(request));
 
     host.provideOptions('channels', async () => this.channels);
     host.provideOptions('members', async () =>
@@ -614,6 +747,10 @@ export class DiscordPlugin implements Plugin {
 
     this.ipc?.stop();
     this.ipc = undefined;
+    this.subscribed = new Map();
+    // A face that failed to download because the machine was not on the
+    // network yet is worth one more try now that something has connected.
+    this.avatars.forgetFailures();
     this.clearVariables();
 
     const settings = host.settings();
@@ -682,6 +819,10 @@ export class DiscordPlugin implements Plugin {
       await this.readVoiceSettings();
       await this.readChannel();
       await this.readChannels();
+      // Channels a key counts are subscribed to here as well as in
+      // `readChannel`: somebody sitting in no channel at all still has keys
+      // watching other people's, and nothing else would ask for those.
+      await this.reconcile();
       // Keys watching a channel by name were told to us before there was a
       // connection to ask through. Without this they show nothing until the
       // slow tick comes round, which on a deck that has just started is a
@@ -711,28 +852,55 @@ export class DiscordPlugin implements Plugin {
   }
 
   /**
-   * Watches one channel: who is in it and who is talking.
+   * Brings the per-channel subscriptions in line with what is wanted.
    *
-   * These need a channel id, so they are renewed whenever the person moves —
-   * and the old ones are dropped, or Discord goes on reporting a room nobody
-   * is in.
+   * Two kinds of channel are listened to, and the difference is the whole
+   * point: the one you are in, in full, and the ones a key merely counts, for
+   * comings and goings only.
+   *
+   * The counted ones used to be polled and nothing else. A friend joining a
+   * channel next door left the number sitting still until the poll came round,
+   * and a headcount a quarter of a minute behind is a headcount nobody trusts.
+   * The poll stays as the safety net it always was.
+   *
+   * Written as a difference rather than as unsubscribe-then-subscribe, so a
+   * key appearing on a page does not blink the subscriptions of a channel that
+   * was already being listened to.
    */
-  private async watchChannel(channelId: string, previous: string): Promise<void> {
+  private async reconcile(): Promise<void> {
     const ipc = this.ipc;
-    if (!ipc) return;
+    if (!ipc?.connected) return;
 
-    const events = ['SPEAKING_START', 'SPEAKING_STOP', 'VOICE_STATE_CREATE', 'VOICE_STATE_DELETE'];
-
-    if (previous !== '') {
-      for (const event of events) await ipc.unsubscribe(event, { channel_id: previous });
+    const wanted = new Map<string, readonly string[]>();
+    for (const channelId of this.watching) {
+      if (channelId !== '') wanted.set(channelId, COUNT_EVENTS);
     }
-    if (channelId === '') return;
+    // Last, and overwriting: the channel you are in is watched in full even
+    // when a key happens to be counting it too.
+    if (this.channelId !== '') wanted.set(this.channelId, ROOM_EVENTS);
 
-    for (const event of events) {
-      await ipc.subscribe(event, { channel_id: channelId }).catch((cause: unknown) => {
-        this.host?.log('warn', `Could not watch ${event}: ${describe(cause)}`);
-      });
+    for (const [channelId, events] of this.subscribed) {
+      const now = wanted.get(channelId) ?? [];
+      for (const event of events) {
+        if (now.includes(event)) continue;
+        await ipc.unsubscribe(event, { channel_id: channelId }).catch(() => {
+          // Letting go of a channel Discord has already forgotten about is not
+          // worth a line in anybody's log.
+        });
+      }
     }
+
+    for (const [channelId, events] of wanted) {
+      const had = this.subscribed.get(channelId) ?? [];
+      for (const event of events) {
+        if (had.includes(event)) continue;
+        await ipc.subscribe(event, { channel_id: channelId }).catch((cause: unknown) => {
+          this.host?.log('warn', `Could not watch ${event} on ${channelId}: ${describe(cause)}`);
+        });
+      }
+    }
+
+    this.subscribed = wanted;
   }
 
   // --- what Discord says ----------------------------------------------------
@@ -750,9 +918,15 @@ export class DiscordPlugin implements Plugin {
 
       case 'VOICE_STATE_CREATE':
       case 'VOICE_STATE_DELETE':
-        // Somebody came or went. Read the room rather than patching the list:
-        // the two events do not carry enough to keep a count honest.
-        void this.readChannel();
+        /*
+         * Somebody came or went — somewhere.
+         *
+         * The room is read rather than the list patched, because the two
+         * events do not carry enough to keep a count honest. Both the room and
+         * the counted channels, because the event does not reliably say which
+         * of them it was about, and asking is one command each.
+         */
+        void this.readChannel().then(() => this.readWatched());
         return;
 
       case 'SPEAKING_START':
@@ -804,7 +978,16 @@ export class DiscordPlugin implements Plugin {
       const channel = await ipc.command<{
         id?: string;
         name?: string;
-        voice_states?: { user?: { id?: string; username?: string; global_name?: string }; nick?: string }[];
+        voice_states?: {
+          user?: {
+            id?: string;
+            username?: string;
+            global_name?: string;
+            avatar?: string | null;
+            discriminator?: string;
+          };
+          nick?: string;
+        }[];
       }>('GET_SELECTED_VOICE_CHANNEL');
 
       const id = String(channel?.id ?? known ?? '');
@@ -816,6 +999,7 @@ export class DiscordPlugin implements Plugin {
         // What this person is called here: the server nickname first, because
         // that is the name on screen in Discord itself.
         name: String(state.nick ?? state.user?.global_name ?? state.user?.username ?? ''),
+        address: avatarAddress(state.user ?? {}),
       }));
 
       // No argument means "the channel you are in", which `variableKey` gives
@@ -835,8 +1019,12 @@ export class DiscordPlugin implements Plugin {
       if (id !== previous) {
         // Talking is about a room, and the room changed.
         this.talking.clear();
+        this.started.clear();
+        this.shown = [];
+        this.lingering = [];
         this.publishTalking();
-        await this.watchChannel(id, previous);
+        host.redraw();
+        await this.reconcile();
       }
     } catch (cause) {
       this.host?.log('warn', `Could not read the voice channel: ${describe(cause)}`);
@@ -862,6 +1050,18 @@ export class DiscordPlugin implements Plugin {
           'GET_CHANNEL',
           { channel_id: channelId },
         );
+
+        if (channel.voice_states === undefined) {
+          /*
+           * Not the same thing as an empty channel.
+           *
+           * A client that answers about a channel without voice states at all
+           * is one where a headcount cannot work — and that is a claim about
+           * the real Discord which nothing here can check, so it goes in the
+           * log rather than into a comment stating it as fact.
+           */
+          host.log('warn', `Discord gave no voice states for channel ${channelId}`);
+        }
 
         // The name as well as the count, from the one question: a key labelled
         // with a channel should follow a rename rather than keep the name it
@@ -913,10 +1113,105 @@ export class DiscordPlugin implements Plugin {
   private setTalking(userId: string, talking: boolean): void {
     if (userId === '') return;
 
-    if (talking) this.talking.add(userId);
-    else this.talking.delete(userId);
+    if (talking) {
+      this.talking.add(userId);
+      this.started.set(userId, (this.turn += 1));
+    } else {
+      this.talking.delete(userId);
+      this.started.delete(userId);
+    }
 
+    this.reslot();
     this.publishTalking();
+  }
+
+  /**
+   * Who the widget shows, and in which tile.
+   *
+   * Two rules, and the second is the one worth explaining. Nobody who is
+   * already on screen moves while they go on talking — a face that slid to a
+   * different tile every time somebody else opened their mouth would be a key
+   * you cannot read in a conversation, which is the only time this is looked
+   * at. Recency decides only who *gets* a tile: with more people talking than
+   * there is room for, whoever started most recently takes the tile of
+   * whoever has been going longest.
+   *
+   * Somebody dropped that way is not forgotten, only off screen. A tile
+   * freeing up is filled from whoever is still talking, newest first.
+   */
+  private reslot(): void {
+    const before = this.shown.join();
+
+    this.shown = this.shown.filter((id) => this.talking.has(id));
+
+    const waiting = [...this.talking]
+      .filter((id) => !this.shown.includes(id))
+      .sort((left, right) => (this.started.get(right) ?? 0) - (this.started.get(left) ?? 0));
+
+    for (const id of waiting) {
+      if (this.shown.length < MAX_FACES) {
+        this.shown.push(id);
+        continue;
+      }
+
+      const stalest = this.shown.reduce((oldest, one) =>
+        (this.started.get(one) ?? 0) < (this.started.get(oldest) ?? 0) ? one : oldest,
+      );
+      if ((this.started.get(id) ?? 0) <= (this.started.get(stalest) ?? 0)) break;
+
+      this.shown[this.shown.indexOf(stalest)] = id;
+    }
+
+    if (this.shown.length > 0) this.lingering = [...this.shown];
+    if (this.shown.join() !== before) this.host?.redraw();
+  }
+
+  /**
+   * The faces of whoever is talking, drawn for the key that asked.
+   *
+   * Nothing while the room is quiet — unless the key was set up to hold the
+   * last faces, faded. A pause between two sentences is about a second, and a
+   * key that goes blank for it does not read as "quiet"; it reads as broken.
+   */
+  private speakers(request: SurfaceRequest): SurfaceFrame | undefined {
+    const linger = String(request.params['quiet'] ?? 'nothing') === 'last';
+    const ids = this.shown.length > 0 ? this.shown : linger ? this.lingering : [];
+    if (ids.length === 0) return undefined;
+
+    const faces = ids.map<Face>((id) => {
+      const address = this.members.find((member) => member.id === id)?.address ?? '';
+      const picture = this.avatars.picture(address);
+      return picture === undefined ? { id } : { id, picture };
+    });
+
+    const faded = this.shown.length === 0;
+    const background = String(request.params['background'] ?? '');
+
+    const source = drawSpeakers(
+      faces,
+      {
+        ...(background === '' ? {} : { background }),
+        ...(faded ? { opacity: FADED } : {}),
+      },
+      request.cols,
+      request.rows,
+    );
+
+    /*
+     * Named by what is in the picture rather than left anonymous.
+     *
+     * This is a still between one person starting and the next, which on a
+     * quiet call is minutes — and an unnamed frame is written down the cable
+     * on every repaint of the whole deck. The addresses are in the name and
+     * not only the ids, so somebody changing their avatar changes the picture.
+     */
+    const id = `${request.cols}x${request.rows}|${faded ? 'faded' : 'lit'}|${background}|${faces
+      .map((face) => `${face.id}:${face.picture ? 'y' : 'n'}`)
+      .join(',')}|${ids
+      .map((one) => this.members.find((member) => member.id === one)?.address ?? '')
+      .join(',')}`;
+
+    return { source, id };
   }
 
   private publishTalking(): void {
@@ -934,6 +1229,9 @@ export class DiscordPlugin implements Plugin {
     if (!host) return;
 
     this.talking.clear();
+    this.started.clear();
+    this.shown = [];
+    this.lingering = [];
     this.members = [];
     this.channelId = '';
 
