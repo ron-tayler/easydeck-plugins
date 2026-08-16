@@ -68,7 +68,7 @@ export const discordManifest: PluginManifest = {
     en: 'Mute, deafen, voice channels and who is talking',
     ru: 'Микрофон, наушники, голосовые каналы и кто говорит',
   },
-  version: '1.0.0',
+  version: '1.1.0',
   apiVersion: PLUGIN_API_VERSION,
 
   settings: [
