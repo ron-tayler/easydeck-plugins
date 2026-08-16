@@ -72,9 +72,10 @@ jobs:
           pnpm test
           pnpm build
 
-      # The index goes in beside the archives, under the name the store asks
-      # for. `file` inside it is a bare filename, which is what lets the same
-      # index serve a folder on a developer's machine and a release here.
+      # The index goes in beside the archives and the per-plugin manifests,
+      # under the name the store asks for. `file` inside it is a bare
+      # filename, which is what lets the same index serve a folder on a
+      # developer's machine and a release here.
       - name: Collect what gets published
         working-directory: easydeck-plugins
         run: cp registry/index.json build/index.json
@@ -88,4 +89,4 @@ jobs:
           gh release create plugins \
             --title "Plugins" \
             --notes "Built from ${{ github.sha }}. Fetched by the store from releases/latest." \
-            build/index.json build/*.easydeck
+            build/index.json build/*.easydeck build/ed.*.json

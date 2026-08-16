@@ -152,6 +152,24 @@ async function buildOne(author, name, folder) {
   const bytes = writeZip(await pack(final));
   await writeFile(join(buildRoot, archive), bytes);
 
+  /*
+   * The full manifest, in a file of its own.
+   *
+   * It used to ride inside the index, and it was 97 to 99 per cent of every
+   * entry there: four plugins made a hundred-kilobyte index, of which one and
+   * a half kilobytes was what a list actually draws. A store paid for every
+   * plugin's actions, variables, settings and presets in order to show four
+   * names — and would have paid a megabyte at fifty plugins.
+   *
+   * So the index carries the row and this carries the card, fetched when
+   * somebody opens one.
+   */
+  await writeFile(
+    join(buildRoot, `${manifest.id}.json`),
+    JSON.stringify(storefront(manifest), null, 2),
+    'utf8',
+  );
+
   return {
     id: manifest.id,
     author,
@@ -161,7 +179,14 @@ async function buildOne(author, name, folder) {
     file: archive,
     sha256: createHash('sha256').update(bytes).digest('hex'),
     bytes: bytes.byteLength,
-    manifest: storefront(manifest),
+    /*
+     * What a row needs, and nothing more: a name, a line about it, and one
+     * small picture. Everything else is in the manifest beside this.
+     */
+    name: manifest.name,
+    ...(manifest.description ? { description: manifest.description } : {}),
+    ...(manifest.author ? { by: manifest.author } : {}),
+    ...(manifest.cover ? { cover: manifest.cover } : {}),
   };
 }
 
