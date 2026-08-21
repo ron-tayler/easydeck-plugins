@@ -119,6 +119,22 @@ importers:
         specifier: ~5.9.3
         version: 5.9.3
 
+  plugins/rt/gyverlamp:
+    dependencies:
+      '@easydeck/plugin-sdk':
+        specifier: workspace:*
+        version: link:../../../sdk
+    devDependencies:
+      '@easydeck/engine':
+        specifier: link:../../../../EasyDeck/packages/engine
+        version: link:../../../../EasyDeck/packages/engine
+      '@types/node':
+        specifier: ^24.13.3
+        version: 24.13.3
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
+
   sdk:
     dependencies:
       '@easydeck/engine':

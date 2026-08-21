@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-16T14:58:33.978Z",
+  "generated": "2026-08-21T14:11:14.674Z",
   "plugins": [
     {
       "id": "ed.discord",
@@ -7,8 +7,8 @@
       "version": "1.3.0",
       "apiVersion": 1,
       "file": "ed.discord.easydeck",
-      "sha256": "3c3f2ff587d52298010bdcf05f6a064757c3ee3ed161913c6e98358bec0b2cd5",
-      "bytes": 31016,
+      "sha256": "ebe854663d46ebb6680ff6fc9a97b860e4c0d96c90746a08ce6d677e2bfe261a",
+      "bytes": 31051,
       "name": {
         "en": "Discord",
         "ru": "Discord"
@@ -747,8 +747,8 @@
       "version": "1.0.0",
       "apiVersion": 1,
       "file": "ed.obs.easydeck",
-      "sha256": "d00cb3266e9a34259061358a8afe179c5f8ea6e7c6eff42abdbf75ed57a3f2ca",
-      "bytes": 53306,
+      "sha256": "7afdcc6d86a5ebdd44a1da8d75710a470bf26f5dbbacc122d0d93d9935dae88d",
+      "bytes": 53330,
       "name": {
         "en": "OBS",
         "ru": "OBS"
@@ -1877,8 +1877,8 @@
       "version": "1.0.0",
       "apiVersion": 1,
       "file": "ed.soundpad.easydeck",
-      "sha256": "27db0c58caf17c4e14aae0bc72e0fdef68ebe8ee6c34a78d05d9da4e13478528",
-      "bytes": 31613,
+      "sha256": "5f4d48fcbb38309d62b8f74e80f32cdc9df37e1e8d6dc121233bf29938111211",
+      "bytes": 31648,
       "name": {
         "en": "Soundpad",
         "ru": "Soundpad"
@@ -2463,8 +2463,8 @@
       "version": "1.0.0",
       "apiVersion": 1,
       "file": "ed.vts.easydeck",
-      "sha256": "e727d6f762a700b503b7ddead364faf34d1a360f00570083089af11b86e3a4ba",
-      "bytes": 125068,
+      "sha256": "e759008e3ed5b92eeafd40dfe08d76418f7161a2e265305b0f238b0360054359",
+      "bytes": 125093,
       "name": {
         "en": "VTube Studio",
         "ru": "VTube Studio"
@@ -2907,8 +2907,8 @@
       "version": "1.1.0",
       "apiVersion": 1,
       "file": "ed.yandex.easydeck",
-      "sha256": "f861ada7ebaae74ce1bf52774dd17ec0f63d0b3aac4962b03e89261bcb4905ae",
-      "bytes": 111575,
+      "sha256": "e2463daae2e6f7edc0845a0980314ebaae0478b811bc020e672647df9a3c5bb6",
+      "bytes": 111607,
       "name": {
         "en": "Yandex Station",
         "ru": "Яндекс Станция"
@@ -3879,6 +3879,799 @@
       },
       "coverPath": "assets/maxresdefault.jpg",
       "coverFile": "D:\\dev\\easydeck-plugins\\build\\ed.yandex\\assets\\maxresdefault.jpg"
+    },
+    {
+      "id": "rt.gyverlamp",
+      "author": "rt",
+      "version": "1.1.0",
+      "apiVersion": 1,
+      "file": "rt.gyverlamp.easydeck",
+      "sha256": "5f92fee0a7cc9f35b068f9e1ae164d7fd48e17e6bb32b8da1ae07045b90d1ad9",
+      "bytes": 17335,
+      "name": {
+        "en": "GyverLamp",
+        "ru": "GyverLamp"
+      },
+      "description": {
+        "en": "Effects, brightness and power of GyverLamp matrix lamps over the local network",
+        "ru": "Эффекты, яркость и питание матричных ламп GyverLamp по локальной сети"
+      },
+      "by": {
+        "en": "Ron_Tayler",
+        "ru": "Ron_Tayler"
+      },
+      "cover": "plugin:rt.gyverlamp/assets/cover.svg",
+      "manifest": {
+        "name": {
+          "en": "GyverLamp",
+          "ru": "GyverLamp"
+        },
+        "description": {
+          "en": "Effects, brightness and power of GyverLamp matrix lamps over the local network",
+          "ru": "Эффекты, яркость и питание матричных ламп GyverLamp по локальной сети"
+        },
+        "version": "1.1.0",
+        "apiVersion": 1,
+        "author": {
+          "en": "Ron_Tayler",
+          "ru": "Ron_Tayler"
+        },
+        "cover": "plugin:rt.gyverlamp/assets/cover.svg",
+        "settings": [
+          {
+            "name": "enabled",
+            "type": "boolean",
+            "label": {
+              "en": "Connect to GyverLamp",
+              "ru": "Подключаться к GyverLamp"
+            },
+            "default": false,
+            "required": false
+          },
+          {
+            "name": "lamp",
+            "type": "select",
+            "required": false,
+            "label": {
+              "en": "Lamp",
+              "ru": "Лампа"
+            },
+            "optionsFrom": "lamps",
+            "description": {
+              "en": "The one keys drive unless they name another. Press Find lamps below to fill this in",
+              "ru": "С ней работают клавиши, если в них не выбрана другая. Список заполняет кнопка «Найти лампы»"
+            },
+            "emptyNote": {
+              "en": "No lamps yet — press Find lamps, or add an address below",
+              "ru": "Ламп пока нет — нажмите «Найти лампы» или впишите адрес ниже"
+            }
+          },
+          {
+            "name": "manual",
+            "type": "string",
+            "required": false,
+            "label": {
+              "en": "Addresses by hand",
+              "ru": "Адреса вручную"
+            },
+            "placeholder": {
+              "en": "192.168.1.90, 192.168.0.5:8888",
+              "ru": "192.168.1.90, 192.168.0.5:8888"
+            },
+            "description": {
+              "en": "For lamps Find lamps cannot reach, separated by commas",
+              "ru": "Для ламп, которые не находит поиск, через запятую"
+            }
+          },
+          {
+            "name": "lamps",
+            "type": "string",
+            "internal": true,
+            "required": false,
+            "label": {
+              "en": "Known lamps",
+              "ru": "Известные лампы"
+            }
+          }
+        ],
+        "commands": [
+          {
+            "name": "rescan",
+            "label": {
+              "en": "Find lamps",
+              "ru": "Найти лампы"
+            },
+            "icon": "globe",
+            "description": {
+              "en": "Asks every host of the local network which of them is a lamp",
+              "ru": "Спрашивает каждый адрес локальной сети, не лампа ли он"
+            }
+          }
+        ],
+        "variables": [
+          {
+            "name": "rt.gyverlamp.lamp",
+            "type": "string",
+            "label": {
+              "en": "Chosen lamp",
+              "ru": "Выбранная лампа"
+            },
+            "description": {
+              "en": "The lamp the settings chose, which the variables with no argument are about",
+              "ru": "Лампа, выбранная в настройках, — о ней говорят переменные без аргумента"
+            }
+          },
+          {
+            "name": "rt.gyverlamp.connected",
+            "type": "boolean",
+            "label": {
+              "en": "Lamp answering",
+              "ru": "Лампа на связи"
+            },
+            "initial": false,
+            "argument": {
+              "label": {
+                "en": "Lamp",
+                "ru": "Лампа"
+              },
+              "description": {
+                "en": "Leave empty for the one chosen in settings",
+                "ru": "Оставьте пустой для той, что выбрана в настройках"
+              },
+              "optionsFrom": "lamps"
+            }
+          },
+          {
+            "name": "rt.gyverlamp.on",
+            "type": "boolean",
+            "label": {
+              "en": "Lamp on",
+              "ru": "Лампа горит"
+            },
+            "initial": false,
+            "argument": {
+              "label": {
+                "en": "Lamp",
+                "ru": "Лампа"
+              },
+              "description": {
+                "en": "Leave empty for the one chosen in settings",
+                "ru": "Оставьте пустой для той, что выбрана в настройках"
+              },
+              "optionsFrom": "lamps"
+            }
+          },
+          {
+            "name": "rt.gyverlamp.effect",
+            "type": "number",
+            "label": {
+              "en": "Effect number",
+              "ru": "Номер эффекта"
+            },
+            "argument": {
+              "label": {
+                "en": "Lamp",
+                "ru": "Лампа"
+              },
+              "description": {
+                "en": "Leave empty for the one chosen in settings",
+                "ru": "Оставьте пустой для той, что выбрана в настройках"
+              },
+              "optionsFrom": "lamps"
+            }
+          },
+          {
+            "name": "rt.gyverlamp.effect-name",
+            "type": "string",
+            "label": {
+              "en": "Effect",
+              "ru": "Эффект"
+            },
+            "description": {
+              "en": "As the lamp itself names it, read from the lamp once and kept",
+              "ru": "Как его называет сама лампа — список читается из лампы и запоминается"
+            },
+            "argument": {
+              "label": {
+                "en": "Lamp",
+                "ru": "Лампа"
+              },
+              "description": {
+                "en": "Leave empty for the one chosen in settings",
+                "ru": "Оставьте пустой для той, что выбрана в настройках"
+              },
+              "optionsFrom": "lamps"
+            }
+          },
+          {
+            "name": "rt.gyverlamp.brightness",
+            "type": "number",
+            "label": {
+              "en": "Brightness",
+              "ru": "Яркость"
+            },
+            "description": {
+              "en": "1 to 255, and it belongs to the effect: switching effects switches it too",
+              "ru": "От 1 до 255, и она принадлежит эффекту: сменился эффект — сменилась и яркость"
+            },
+            "argument": {
+              "label": {
+                "en": "Lamp",
+                "ru": "Лампа"
+              },
+              "description": {
+                "en": "Leave empty for the one chosen in settings",
+                "ru": "Оставьте пустой для той, что выбрана в настройках"
+              },
+              "optionsFrom": "lamps"
+            }
+          },
+          {
+            "name": "rt.gyverlamp.speed",
+            "type": "number",
+            "label": {
+              "en": "Speed",
+              "ru": "Скорость"
+            },
+            "argument": {
+              "label": {
+                "en": "Lamp",
+                "ru": "Лампа"
+              },
+              "description": {
+                "en": "Leave empty for the one chosen in settings",
+                "ru": "Оставьте пустой для той, что выбрана в настройках"
+              },
+              "optionsFrom": "lamps"
+            }
+          },
+          {
+            "name": "rt.gyverlamp.scale",
+            "type": "number",
+            "label": {
+              "en": "Scale",
+              "ru": "Масштаб"
+            },
+            "description": {
+              "en": "Each effect reads it its own way — size here, colour or variant there",
+              "ru": "Каждый эффект понимает его по-своему: где-то размер, где-то цвет или вариант"
+            },
+            "argument": {
+              "label": {
+                "en": "Lamp",
+                "ru": "Лампа"
+              },
+              "description": {
+                "en": "Leave empty for the one chosen in settings",
+                "ru": "Оставьте пустой для той, что выбрана в настройках"
+              },
+              "optionsFrom": "lamps"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "type": "rt.gyverlamp.power",
+            "icon": "toggle",
+            "label": {
+              "en": "Power",
+              "ru": "Питание"
+            },
+            "params": [
+              {
+                "name": "mode",
+                "type": "select",
+                "default": "toggle",
+                "label": {
+                  "en": "What to do",
+                  "ru": "Что сделать"
+                },
+                "options": [
+                  {
+                    "value": "toggle",
+                    "label": {
+                      "en": "Toggle",
+                      "ru": "Переключить"
+                    }
+                  },
+                  {
+                    "value": "on",
+                    "label": {
+                      "en": "On",
+                      "ru": "Включить"
+                    }
+                  },
+                  {
+                    "value": "off",
+                    "label": {
+                      "en": "Off",
+                      "ru": "Выключить"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "lamp",
+                "type": "select",
+                "required": false,
+                "label": {
+                  "en": "Lamp",
+                  "ru": "Лампа"
+                },
+                "optionsFrom": "lamps",
+                "description": {
+                  "en": "Leave empty for the one chosen in settings",
+                  "ru": "Оставьте пустой для той, что выбрана в настройках"
+                }
+              }
+            ]
+          },
+          {
+            "type": "rt.gyverlamp.effect",
+            "icon": "cycle",
+            "label": {
+              "en": "Effect",
+              "ru": "Эффект"
+            },
+            "params": [
+              {
+                "name": "mode",
+                "type": "select",
+                "default": "set",
+                "label": {
+                  "en": "Which one",
+                  "ru": "Какой"
+                },
+                "options": [
+                  {
+                    "value": "set",
+                    "label": {
+                      "en": "This one",
+                      "ru": "Вот этот"
+                    }
+                  },
+                  {
+                    "value": "next",
+                    "label": {
+                      "en": "Next",
+                      "ru": "Следующий"
+                    }
+                  },
+                  {
+                    "value": "prev",
+                    "label": {
+                      "en": "Previous",
+                      "ru": "Предыдущий"
+                    }
+                  },
+                  {
+                    "value": "random",
+                    "label": {
+                      "en": "Random",
+                      "ru": "Случайный"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "effect",
+                "type": "select",
+                "required": false,
+                "label": {
+                  "en": "Effect",
+                  "ru": "Эффект"
+                },
+                "optionsFrom": "effects",
+                "dependsOn": [
+                  "lamp"
+                ],
+                "emptyNote": {
+                  "en": "No effect list yet — find the lamps first",
+                  "ru": "Списка эффектов пока нет — сначала найдите лампы"
+                },
+                "description": {
+                  "en": "Only for \"This one\"; the list is the lamp's own",
+                  "ru": "Только для «Вот этот»; список — из самой лампы"
+                }
+              },
+              {
+                "name": "lamp",
+                "type": "select",
+                "required": false,
+                "label": {
+                  "en": "Lamp",
+                  "ru": "Лампа"
+                },
+                "optionsFrom": "lamps",
+                "description": {
+                  "en": "Leave empty for the one chosen in settings",
+                  "ru": "Оставьте пустой для той, что выбрана в настройках"
+                }
+              }
+            ]
+          },
+          {
+            "type": "rt.gyverlamp.brightness",
+            "icon": "increment",
+            "label": {
+              "en": "Brightness",
+              "ru": "Яркость"
+            },
+            "description": {
+              "en": "Of the current effect — the firmware keeps one per effect",
+              "ru": "Текущего эффекта — прошивка хранит свою на каждый эффект"
+            },
+            "params": [
+              {
+                "name": "mode",
+                "type": "select",
+                "default": "up",
+                "label": {
+                  "en": "What to do",
+                  "ru": "Что сделать"
+                },
+                "options": [
+                  {
+                    "value": "up",
+                    "label": {
+                      "en": "Brighter",
+                      "ru": "Ярче"
+                    }
+                  },
+                  {
+                    "value": "down",
+                    "label": {
+                      "en": "Dimmer",
+                      "ru": "Тише"
+                    }
+                  },
+                  {
+                    "value": "set",
+                    "label": {
+                      "en": "Set to",
+                      "ru": "Задать"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "value",
+                "type": "number",
+                "default": 25,
+                "min": 1,
+                "max": 255,
+                "label": {
+                  "en": "How much",
+                  "ru": "Сколько"
+                },
+                "description": {
+                  "en": "The step, or the value to set; the lamp holds 1 to 255",
+                  "ru": "Шаг или значение; лампа понимает от 1 до 255"
+                }
+              },
+              {
+                "name": "lamp",
+                "type": "select",
+                "required": false,
+                "label": {
+                  "en": "Lamp",
+                  "ru": "Лампа"
+                },
+                "optionsFrom": "lamps",
+                "description": {
+                  "en": "Leave empty for the one chosen in settings",
+                  "ru": "Оставьте пустой для той, что выбрана в настройках"
+                }
+              }
+            ]
+          },
+          {
+            "type": "rt.gyverlamp.speed",
+            "icon": "next",
+            "label": {
+              "en": "Speed",
+              "ru": "Скорость"
+            },
+            "description": {
+              "en": "Of the current effect, like brightness",
+              "ru": "Текущего эффекта, как и яркость"
+            },
+            "params": [
+              {
+                "name": "mode",
+                "type": "select",
+                "default": "up",
+                "label": {
+                  "en": "What to do",
+                  "ru": "Что сделать"
+                },
+                "options": [
+                  {
+                    "value": "up",
+                    "label": {
+                      "en": "Faster",
+                      "ru": "Быстрее"
+                    }
+                  },
+                  {
+                    "value": "down",
+                    "label": {
+                      "en": "Slower",
+                      "ru": "Медленнее"
+                    }
+                  },
+                  {
+                    "value": "set",
+                    "label": {
+                      "en": "Set to",
+                      "ru": "Задать"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "value",
+                "type": "number",
+                "default": 25,
+                "min": 1,
+                "max": 255,
+                "label": {
+                  "en": "How much",
+                  "ru": "Сколько"
+                }
+              },
+              {
+                "name": "lamp",
+                "type": "select",
+                "required": false,
+                "label": {
+                  "en": "Lamp",
+                  "ru": "Лампа"
+                },
+                "optionsFrom": "lamps",
+                "description": {
+                  "en": "Leave empty for the one chosen in settings",
+                  "ru": "Оставьте пустой для той, что выбрана в настройках"
+                }
+              }
+            ]
+          },
+          {
+            "type": "rt.gyverlamp.scale",
+            "icon": "variable",
+            "label": {
+              "en": "Scale",
+              "ru": "Масштаб"
+            },
+            "description": {
+              "en": "The third knob of an effect. Each effect reads it its own way — size here, colour or variant there",
+              "ru": "Третья ручка эффекта. Каждый эффект понимает её по-своему: где-то размер, где-то цвет или вариант"
+            },
+            "params": [
+              {
+                "name": "mode",
+                "type": "select",
+                "default": "up",
+                "label": {
+                  "en": "What to do",
+                  "ru": "Что сделать"
+                },
+                "options": [
+                  {
+                    "value": "up",
+                    "label": {
+                      "en": "More",
+                      "ru": "Больше"
+                    }
+                  },
+                  {
+                    "value": "down",
+                    "label": {
+                      "en": "Less",
+                      "ru": "Меньше"
+                    }
+                  },
+                  {
+                    "value": "set",
+                    "label": {
+                      "en": "Set to",
+                      "ru": "Задать"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "value",
+                "type": "number",
+                "default": 10,
+                "min": 1,
+                "max": 255,
+                "label": {
+                  "en": "How much",
+                  "ru": "Сколько"
+                },
+                "description": {
+                  "en": "Most effects use 1 to 100; a few read the whole 1 to 255",
+                  "ru": "Большинству эффектов хватает 1–100; некоторые понимают весь диапазон до 255"
+                }
+              },
+              {
+                "name": "lamp",
+                "type": "select",
+                "required": false,
+                "label": {
+                  "en": "Lamp",
+                  "ru": "Лампа"
+                },
+                "optionsFrom": "lamps",
+                "description": {
+                  "en": "Leave empty for the one chosen in settings",
+                  "ru": "Оставьте пустой для той, что выбрана в настройках"
+                }
+              }
+            ]
+          }
+        ],
+        "presets": [
+          {
+            "name": "power",
+            "label": {
+              "en": "Power",
+              "ru": "Питание"
+            },
+            "description": {
+              "en": "Turns the lamp on and off, and shows which it is",
+              "ru": "Включает и выключает лампу и показывает, горит ли она"
+            },
+            "button": {
+              "stateFrom": "rt.gyverlamp.on",
+              "states": [
+                {
+                  "id": "off",
+                  "when": false,
+                  "visual": {
+                    "background": "#22303c",
+                    "icon": {
+                      "source": "plugin:rt.gyverlamp/power.svg"
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "rt.gyverlamp.power",
+                        "params": {
+                          "mode": "toggle"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "on",
+                  "when": true,
+                  "visual": {
+                    "background": "#2f6f4f",
+                    "icon": {
+                      "source": "plugin:rt.gyverlamp/power.svg"
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "rt.gyverlamp.power",
+                        "params": {
+                          "mode": "toggle"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "effect",
+            "label": {
+              "en": "Effect, by name",
+              "ru": "Эффект, по имени"
+            },
+            "description": {
+              "en": "Says which effect is burning; pressing it moves to the next",
+              "ru": "Показывает, какой эффект горит; нажатие включает следующий"
+            },
+            "button": {
+              "states": [
+                {
+                  "id": "default",
+                  "visual": {
+                    "background": "#1a1c22",
+                    "label": {
+                      "text": "{{rt.gyverlamp.effect-name}}",
+                      "fontSize": 12
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "rt.gyverlamp.effect",
+                        "params": {
+                          "mode": "next"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "brighter",
+            "label": {
+              "en": "Brighter",
+              "ru": "Ярче"
+            },
+            "button": {
+              "states": [
+                {
+                  "id": "default",
+                  "visual": {
+                    "background": "#22303c",
+                    "label": {
+                      "text": "Ярче\n{{rt.gyverlamp.brightness}}",
+                      "fontSize": 13
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "rt.gyverlamp.brightness",
+                        "params": {
+                          "mode": "up",
+                          "value": 25
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "dimmer",
+            "label": {
+              "en": "Dimmer",
+              "ru": "Тише"
+            },
+            "button": {
+              "states": [
+                {
+                  "id": "default",
+                  "visual": {
+                    "background": "#22303c",
+                    "label": {
+                      "text": "Тише\n{{rt.gyverlamp.brightness}}",
+                      "fontSize": 13
+                    }
+                  },
+                  "actions": {
+                    "press": [
+                      {
+                        "type": "rt.gyverlamp.brightness",
+                        "params": {
+                          "mode": "down",
+                          "value": 25
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "coverPath": "assets/cover.svg",
+      "coverFile": "D:\\dev\\easydeck-plugins\\build\\rt.gyverlamp\\assets\\cover.svg"
     }
   ]
 }

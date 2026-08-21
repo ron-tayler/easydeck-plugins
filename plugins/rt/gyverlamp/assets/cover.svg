@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#14161d"/>
+      <stop offset="1" stop-color="#1e2230"/>
+    </linearGradient>
+    <linearGradient id="flame" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#b43a1e"/>
+      <stop offset="0.45" stop-color="#e07a1f"/>
+      <stop offset="1" stop-color="#f4c542"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#sky)"/>
+
+  <!-- The lamp: a 16x16 matrix in a frame, burning the fire effect. -->
+  <g transform="translate(192,52)">
+    <rect x="-12" y="-12" width="280" height="280" rx="18" fill="#0c0d12"/>
+    <rect x="0" y="0" width="256" height="256" rx="8" fill="#07080b"/>
+    <g>
+      <rect x="8"   y="200" width="24" height="24" rx="3" fill="url(#flame)" opacity="0.95"/>
+      <rect x="40"  y="184" width="24" height="24" rx="3" fill="url(#flame)" opacity="0.8"/>
+      <rect x="72"  y="216" width="24" height="24" rx="3" fill="url(#flame)" opacity="0.9"/>
+      <rect x="104" y="168" width="24" height="24" rx="3" fill="url(#flame)" opacity="0.75"/>
+      <rect x="136" y="200" width="24" height="24" rx="3" fill="url(#flame)" opacity="0.95"/>
+      <rect x="168" y="184" width="24" height="24" rx="3" fill="url(#flame)" opacity="0.85"/>
+      <rect x="200" y="216" width="24" height="24" rx="3" fill="url(#flame)" opacity="0.9"/>
+      <rect x="224" y="192" width="24" height="24" rx="3" fill="url(#flame)" opacity="0.7"/>
+      <rect x="24"  y="152" width="24" height="24" rx="3" fill="#e07a1f" opacity="0.65"/>
+      <rect x="88"  y="136" width="24" height="24" rx="3" fill="#e07a1f" opacity="0.5"/>
+      <rect x="152" y="152" width="24" height="24" rx="3" fill="#e07a1f" opacity="0.6"/>
+      <rect x="200" y="144" width="24" height="24" rx="3" fill="#e07a1f" opacity="0.45"/>
+      <rect x="56"  y="104" width="24" height="24" rx="3" fill="#f4c542" opacity="0.35"/>
+      <rect x="120" y="88"  width="24" height="24" rx="3" fill="#f4c542" opacity="0.3"/>
+      <rect x="176" y="104" width="24" height="24" rx="3" fill="#f4c542" opacity="0.25"/>
+      <rect x="104" y="40"  width="24" height="24" rx="3" fill="#f4c542" opacity="0.15"/>
+    </g>
+  </g>
+
+  <text x="320" y="342" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="600" fill="#e8e9ee">GyverLamp</text>
+</svg>
